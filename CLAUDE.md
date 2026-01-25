@@ -184,3 +184,327 @@ Users should be able to configure sources via UI. Store in user profile:
 5. **Ingredient Normalization**: "1 tomato" vs "tomatoes" vs "cherry tomatoes" - implement fuzzy matching and standardization.
 
 6. **ChatGPT API Costs**: Monitor token usage. Optimize prompts to be concise while maintaining quality.
+
+
+
+## Project Structure Philosophy
+
+This project follows **Layered Specification-Driven Development**.
+
+### Layer Hierarchy (CRITICAL - READ FIRST)
+````
+L0: foundation/PRINCIPLES.md   → WHY we build
+L1: foundation/ARCHITECTURE.md → HOW we build (system-wide)
+L2: foundation/DOMAIN.md       → WHAT we build (conceptual)
+L3: features/*/SPEC.md         → WHICH features
+L4: features/*/TASKS.md        → Implementation steps
+````
+
+**Inheritance Rule**: Lower layers MUST reference and comply with upper layers.
+
+---
+
+## Mandatory Workflow
+
+### Before ANY code change:
+
+1. **Check Foundation Compliance**
+````bash
+   # Always verify against foundation layers first
+   - Read foundation/ARCHITECTURE.md
+   - Read foundation/DOMAIN.md
+   - Verify no conflicts
+````
+
+2. **Update Sequence (STRICT ORDER)**
+````
+   ❌ WRONG: features/payment/SPEC.md → code
+   ✅ RIGHT: foundation/* → features/*/SPEC.md → code
+````
+
+### When Creating New Features
+````markdown
+## Step 1: Foundation Check (MANDATORY)
+- [ ] Read foundation/ARCHITECTURE.md
+- [ ] Read foundation/DOMAIN.md
+- [ ] Identify inherited constraints
+- [ ] List in SPEC.md under "## Inherited Constraints"
+
+## Step 2: Create Feature SPEC
+Location: features/<feature-name>/SPEC.md
+
+Template:
+```yaml
+---
+inherits_from:
+  - ../../foundation/ARCHITECTURE.md#<section>
+  - ../../foundation/DOMAIN.md#<entity>
+validation_mode: strict
+---
+
+# Feature: <Name>
+
+## Inherited Constraints
+[Auto-populate from foundation layers]
+
+## Feature-Specific Requirements
+[Only add what's unique to this feature]
+```
+
+## Step 3: Validate Consistency
+Before implementation:
+- Run: /validate-layer-consistency
+- Fix any conflicts with foundation
+- Get approval if foundation change needed
+````
+
+---
+
+## Architecture Change Protocol
+
+### Changing foundation/ARCHITECTURE.md
+
+⚠️ **HIGH IMPACT - Special Process Required**
+````markdown
+1. Create RFC document:
+   foundation/rfcs/YYYYMMDD-<change>.md
+
+2. Impact Analysis:
+   - List all affected features
+   - Estimate migration effort
+   - Identify breaking changes
+
+3. Approval Required:
+   - Tech Lead: [ ]
+   - Product: [ ]
+   - Security (if auth/data): [ ]
+
+4. Migration Plan:
+   - Update foundation/ARCHITECTURE.md
+   - Update all features/*/SPEC.md
+   - Update all features/*/TASKS.md
+   - Run full test suite
+````
+
+### Changing foundation/DOMAIN.md
+
+⚠️ **MEDIUM IMPACT**
+````markdown
+1. Check feature dependencies:
+   grep -r "foundation/DOMAIN.md" features/
+
+2. Update all dependent features
+
+3. Approval Required:
+   - Domain Expert: [ ]
+   - Lead Developer: [ ]
+````
+
+---
+
+## Code Generation Rules
+
+### ALWAYS check foundation first
+````typescript
+// ❌ WRONG
+async function createPayment(userId: string, amount: number) {
+  // Direct implementation without checking ARCHITECTURE.md
+}
+
+// ✅ RIGHT - References foundation
+/**
+ * Payment creation following:
+ * - ARCHITECTURE.md#database-strategy (PostgreSQL)
+ * - ARCHITECTURE.md#transaction-guarantee (ACID)
+ * - DOMAIN.md#payment-entity
+ */
+async function createPayment(userId: string, amount: number) {
+  // Implementation that respects foundation constraints
+}
+````
+
+---
+
+## Consistency Validation
+
+### Before committing code:
+````bash
+# Run these checks (implement as git hooks)
+
+1. Check spec references:
+   - All features reference foundation
+   - No orphaned constraints
+   
+2. Check inheritance:
+   - Features don't contradict foundation
+   - Database choices match ARCHITECTURE.md
+   - Entity definitions match DOMAIN.md
+
+3. Check completeness:
+   - All foundation changes propagated
+   - No stale references
+````
+
+---
+
+## Common Patterns
+
+### Pattern 1: Adding a new feature
+````bash
+1. Read foundation/ARCHITECTURE.md
+2. Read foundation/DOMAIN.md
+3. Create features/new-feature/SPEC.md
+4. Reference foundation constraints explicitly
+5. Add only feature-specific details
+6. Generate TASKS.md from SPEC.md
+````
+
+### Pattern 2: Modifying architecture
+````bash
+1. Create foundation/rfcs/change-proposal.md
+2. Run impact analysis across all features
+3. Get approvals
+4. Update foundation/ARCHITECTURE.md
+5. Update ALL affected features/*/SPEC.md
+6. Verify with /validate-layer-consistency
+````
+
+### Pattern 3: Refactoring domain model
+````bash
+1. Identify affected entities in DOMAIN.md
+2. Find all features using those entities
+3. Update DOMAIN.md first
+4. Cascade updates to features
+5. Update implementation
+````
+
+---
+
+## RED FLAGS - Stop Immediately If You See:
+
+❌ **Feature SPEC without foundation references**
+❌ **Direct implementation without checking ARCHITECTURE.md**
+❌ **Database choice in feature that differs from ARCHITECTURE.md**
+❌ **Entity definition in feature that differs from DOMAIN.md**
+❌ **Multiple features defining the same constraint differently**
+
+---
+
+## Success Metrics
+
+✅ **Good State**:
+- All features reference foundation
+- foundation/ changes tracked in git history
+- Impact analysis before architectural changes
+- No redundant constraint definitions
+
+❌ **Bad State**:
+- Features with contradicting database choices
+- No clear inheritance chain
+- Foundation changes without feature updates
+- Stale references
+
+---
+
+## Example: Full Workflow
+
+### Scenario: Add "Payment Processing" feature
+````markdown
+1. Foundation Check:
+   Read: foundation/ARCHITECTURE.md
+   - Database: PostgreSQL ✓
+   - Auth: Auth0 ✓
+   - API: RESTful ✓
+   
+   Read: foundation/DOMAIN.md
+   - User entity exists ✓
+   - Payment entity defined ✓
+
+2. Create Spec:
+   File: features/payment-processing/SPEC.md
+```yaml
+   ---
+   inherits_from:
+     - ../../foundation/ARCHITECTURE.md#database-strategy
+     - ../../foundation/ARCHITECTURE.md#api-design
+     - ../../foundation/DOMAIN.md#payment
+     - ../../foundation/DOMAIN.md#user
+   ---
+   
+   # Payment Processing
+   
+   ## Inherited Constraints
+   - Database: PostgreSQL (ARCHITECTURE.md)
+   - ACID transactions required (ARCHITECTURE.md)
+   - RESTful API (ARCHITECTURE.md)
+   - Payment entity schema (DOMAIN.md)
+   
+   ## Feature-Specific
+   - Stripe integration
+   - Webhook handling
+   - Idempotency keys
+```
+
+3. Generate Tasks:
+   /generate-tasks payment-processing
+   → Creates TASKS.md based on SPEC.md
+
+4. Implement:
+   Code respects all inherited constraints
+
+5. Validate:
+   /validate-layer-consistency
+   → ✓ All layers aligned
+````
+
+---
+
+## Troubleshooting
+
+### "Feature spec conflicts with architecture"
+````bash
+1. Check which constraint conflicts
+2. Decide:
+   - Option A: Update feature to match architecture
+   - Option B: Update architecture (requires RFC)
+3. Never: Ignore the conflict
+````
+
+### "Architecture change broke multiple features"
+````bash
+1. Run: /impact-analysis foundation/ARCHITECTURE.md "<change>"
+2. Review all affected features
+3. Create migration checklist
+4. Update features one by one
+5. Run tests after each update
+````
+
+---
+
+## Philosophy
+
+> **Foundation layers (L0-L2) change slowly and deliberately.**
+> **Feature layers (L3-L4) change frequently but within foundation constraints.**
+> 
+> This creates **stability at the core, flexibility at the edges**.
+
+When in doubt, ask:
+- "Does this contradict foundation?"
+- "Should this be in foundation or feature?"
+- "Have I checked all inheritance?"
+
+---
+
+## Quick Reference Card
+
+| Task | Check | Update Order |
+|------|-------|--------------|
+| New feature | foundation/* | foundation → feature SPEC → code |
+| Change arch | Impact analysis | RFC → foundation → all features → code |
+| Refactor domain | Feature dependencies | DOMAIN.md → feature SPECs → code |
+| Bug fix | Feature SPEC only | feature SPEC → code |
+
+---
+
+Remember: **Consistency is more valuable than speed.**
+Take time to maintain the layer hierarchy - it prevents future breakage.
