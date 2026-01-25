@@ -197,7 +197,7 @@ L0: foundation/PRINCIPLES.md   → WHY we build
 L1: foundation/ARCHITECTURE.md → HOW we build (system-wide)
 L2: foundation/DOMAIN.md       → WHAT we build (conceptual)
 L3: features/*/SPEC.md         → WHICH features
-L4: features/*/TASKS.md        → Implementation steps
+L4: features/*/PLAN.md        → Implementation steps
 ````
 
 **Inheritance Rule**: Lower layers MUST reference and comply with upper layers.
@@ -282,7 +282,7 @@ Before implementation:
 4. Migration Plan:
    - Update foundation/ARCHITECTURE.md
    - Update all features/*/SPEC.md
-   - Update all features/*/TASKS.md
+   - Update all features/*/PLAN.md
    - Run full test suite
 ````
 
@@ -356,7 +356,7 @@ async function createPayment(userId: string, amount: number) {
 3. Create features/new-feature/SPEC.md
 4. Reference foundation constraints explicitly
 5. Add only feature-specific details
-6. Generate TASKS.md from SPEC.md
+6. Generate PLAN.md from SPEC.md
 ````
 
 ### Pattern 2: Modifying architecture
@@ -445,9 +445,8 @@ async function createPayment(userId: string, amount: number) {
    - Idempotency keys
 ```
 
-3. Generate Tasks:
-   /generate-tasks payment-processing
-   → Creates TASKS.md based on SPEC.md
+3. Generate Plan:
+   Creates PLAN.md based on SPEC.md
 
 4. Implement:
    Code respects all inherited constraints
