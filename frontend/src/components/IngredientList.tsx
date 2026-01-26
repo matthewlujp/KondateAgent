@@ -1,5 +1,4 @@
-import React from 'react';
-import { Ingredient } from '../types/ingredient';
+import type { Ingredient } from '../types/ingredient';
 import { IngredientItem } from './IngredientItem';
 
 interface IngredientListProps {

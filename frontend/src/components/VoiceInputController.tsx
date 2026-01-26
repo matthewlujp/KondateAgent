@@ -1,4 +1,3 @@
-import React from 'react';
 import { useVoiceInput } from '../hooks/useVoiceInput';
 
 interface VoiceInputControllerProps {

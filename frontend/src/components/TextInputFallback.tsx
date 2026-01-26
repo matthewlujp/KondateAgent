@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import type { KeyboardEvent } from 'react';
 
 interface TextInputFallbackProps {
   onSubmit: (text: string) => void;
@@ -28,7 +29,7 @@ export function TextInputFallback({ onSubmit, isExpanded, onToggle }: TextInputF
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
       e.preventDefault();
       handleSubmit();

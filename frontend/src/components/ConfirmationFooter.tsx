@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface ConfirmationFooterProps {
   ingredientCount: number;
   onConfirm: () => void;

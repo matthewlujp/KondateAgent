@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface SessionStartModalProps {
   isOpen: boolean;
   ingredientCount: number;

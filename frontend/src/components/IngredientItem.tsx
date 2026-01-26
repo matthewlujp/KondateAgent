@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Ingredient } from '../types/ingredient';
+import { useState } from 'react';
+import type { Ingredient } from '../types/ingredient';
 
 interface IngredientItemProps {
   ingredient: Ingredient;
