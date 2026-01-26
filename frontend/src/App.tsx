@@ -1,6 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { IngredientCollectionPage } from './pages';
-import './App.css';
 
 /**
  * Create React Query client

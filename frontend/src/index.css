@@ -1,3 +1,224 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  /* Color Palette - Warm Kitchen Theme */
+
+  /* Terracotta (Primary) */
+  --color-terra-50: #FFF4EE;
+  --color-terra-100: #FFE8DB;
+  --color-terra-200: #FFD0B8;
+  --color-terra-300: #FFB08A;
+  --color-terra-400: #FF8A5C;
+  --color-terra-500: #C2571A;
+  --color-terra-600: #A64912;
+  --color-terra-700: #8A3D0F;
+  --color-terra-800: #6E310C;
+  --color-terra-900: #52250A;
+
+  /* Herb Green (CTA) */
+  --color-herb-50: #E8F5EE;
+  --color-herb-100: #D1EBDD;
+  --color-herb-200: #A3D7BB;
+  --color-herb-300: #75C399;
+  --color-herb-400: #47AF77;
+  --color-herb-500: #2D8B4E;
+  --color-herb-600: #267541;
+  --color-herb-700: #1F5F34;
+  --color-herb-800: #184927;
+  --color-herb-900: #11331A;
+
+  /* Saffron (Warning) */
+  --color-saffron-50: #FEF8E8;
+  --color-saffron-100: #FDF1D1;
+  --color-saffron-200: #FBE3A3;
+  --color-saffron-300: #F9D575;
+  --color-saffron-400: #F7C747;
+  --color-saffron-500: #E09B2D;
+  --color-saffron-600: #C08326;
+  --color-saffron-700: #A06B1F;
+  --color-saffron-800: #805318;
+  --color-saffron-900: #603B11;
+
+  /* Chili Red (Error/Delete) */
+  --color-chili-50: #FBEAEA;
+  --color-chili-100: #F7D5D5;
+  --color-chili-200: #EFABAB;
+  --color-chili-300: #E78181;
+  --color-chili-400: #DF5757;
+  --color-chili-500: #D93025;
+  --color-chili-600: #B7281F;
+  --color-chili-700: #952019;
+  --color-chili-800: #731813;
+  --color-chili-900: #51100D;
+
+  /* Sand (Warm Neutrals) */
+  --color-sand-50: #FFFBF5;
+  --color-sand-100: #FFF6EB;
+  --color-sand-200: #F5E6D3;
+  --color-sand-300: #E0D0B8;
+  --color-sand-400: #C4A582;
+  --color-sand-500: #A8865C;
+  --color-sand-600: #8A6E4A;
+  --color-sand-700: #6C5638;
+  --color-sand-800: #4E3E26;
+  --color-sand-900: #302614;
+  --color-sand-950: #2C2418;
+
+  /* Cream (Background) */
+  --color-cream: #FFFBF5;
+
+  /* Font Families */
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Warm-tinted Shadows */
+  --shadow-warm-sm: 0 1px 2px 0 rgba(194, 87, 26, 0.05);
+  --shadow-warm: 0 2px 8px 0 rgba(194, 87, 26, 0.1);
+  --shadow-warm-md: 0 4px 12px 0 rgba(194, 87, 26, 0.12);
+  --shadow-warm-lg: 0 8px 24px 0 rgba(194, 87, 26, 0.15);
+  --shadow-warm-xl: 0 16px 32px 0 rgba(194, 87, 26, 0.2);
+
+  /* Glow Shadows */
+  --shadow-herb-glow: 0 4px 16px 0 rgba(45, 139, 78, 0.3);
+  --shadow-terra-glow: 0 4px 16px 0 rgba(194, 87, 26, 0.3);
+}
+
+/* Keyframe Animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes voice-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes voice-ring {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Animation Utility Classes */
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-voice-pulse {
+  animation: voice-pulse 1.5s ease-in-out infinite;
+}
+
+.animate-voice-ring {
+  animation: voice-ring 1.5s ease-out infinite;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out;
+}
+
+/* Background Pattern Utilities */
+.bg-kitchen-pattern {
+  background-image: radial-gradient(circle, rgba(194, 87, 26, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.bg-header-gradient {
+  background: linear-gradient(135deg,
+    var(--color-terra-500) 0%,
+    var(--color-terra-600) 100%
+  );
+}
+
+.bg-footer-gradient {
+  background: linear-gradient(180deg,
+    rgba(255, 251, 245, 0.8) 0%,
+    rgba(255, 251, 245, 0.95) 100%
+  );
+}
+
+.bg-voice-idle {
+  background: linear-gradient(135deg,
+    var(--color-terra-400) 0%,
+    var(--color-terra-500) 100%
+  );
+}
+
+.bg-voice-listening {
+  background: linear-gradient(135deg,
+    var(--color-chili-400) 0%,
+    var(--color-chili-500) 100%
+  );
+}
+
+/* Safe Area Insets (for mobile notches) */
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
