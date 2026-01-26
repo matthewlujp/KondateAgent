@@ -52,18 +52,18 @@ export function SessionStartModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 animate-fade-in"
       onClick={onStartFresh}
     >
       <div
-        className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6"
+        className="bg-white rounded-t-[24px] sm:rounded-xl shadow-warm-xl max-w-md w-full p-6 animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="text-center mb-6">
-          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-terra-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-8 w-8 text-blue-600"
+              className="h-8 w-8 text-terra-600"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -76,13 +76,13 @@ export function SessionStartModal({
               />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome back!</h2>
-          <p className="text-gray-600">
+          <h2 className="text-2xl font-bold text-sand-900 font-display mb-2">Welcome back!</h2>
+          <p className="text-sand-600">
             You have an existing list with{' '}
             <span className="font-semibold">{ingredientCount}</span>{' '}
             {ingredientCount === 1 ? 'ingredient' : 'ingredients'}
           </p>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-sand-500 mt-1">
             Last updated {formatLastUpdated(lastUpdated)}
           </p>
         </div>
@@ -90,20 +90,20 @@ export function SessionStartModal({
         <div className="space-y-3">
           <button
             onClick={onUpdateExisting}
-            className="w-full py-4 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-lg transition-colors active:scale-95"
+            className="w-full py-4 px-6 bg-terra-500 hover:bg-terra-600 text-white rounded-lg font-semibold text-lg transition-all shadow-warm hover:shadow-warm-md active:scale-95"
           >
             Update my list
           </button>
 
           <button
             onClick={onStartFresh}
-            className="w-full py-4 px-6 bg-white hover:bg-gray-50 text-gray-700 border-2 border-gray-300 rounded-lg font-semibold text-lg transition-colors active:scale-95"
+            className="w-full py-4 px-6 bg-white hover:bg-sand-50 text-sand-700 border-2 border-sand-300 rounded-lg font-semibold text-lg transition-all active:scale-95"
           >
             Start fresh
           </button>
         </div>
 
-        <p className="text-xs text-gray-500 text-center mt-4">
+        <p className="text-xs text-sand-500 text-center mt-4">
           Starting fresh will clear your previous list
         </p>
       </div>

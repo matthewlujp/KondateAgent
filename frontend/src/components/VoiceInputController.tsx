@@ -26,8 +26,8 @@ export function VoiceInputController({ onTranscript, onWakeWord }: VoiceInputCon
 
   if (!isSupported) {
     return (
-      <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4 text-center">
-        <p className="text-sm text-yellow-800">
+      <div className="bg-saffron-50 border-2 border-saffron-300 rounded-lg p-4 text-center">
+        <p className="text-sm text-saffron-800">
           Voice input is not supported in this browser. Please use Chrome, Edge, or Safari, or use
           the text input below.
         </p>
@@ -37,19 +37,20 @@ export function VoiceInputController({ onTranscript, onWakeWord }: VoiceInputCon
 
   return (
     <div className="flex flex-col items-center space-y-4">
-      <button
-        onClick={isListening ? stopListening : startListening}
-        className={`
-          relative w-24 h-24 rounded-full flex items-center justify-center
-          transition-all duration-200 shadow-lg
-          ${
-            isListening
-              ? 'bg-red-600 hover:bg-red-700 animate-pulse'
-              : 'bg-blue-600 hover:bg-blue-700'
-          }
-        `}
-        aria-label={isListening ? 'Stop listening' : 'Start listening'}
-      >
+      <div className="relative">
+        <button
+          onClick={isListening ? stopListening : startListening}
+          className={`
+            relative w-24 h-24 rounded-full flex items-center justify-center
+            transition-all duration-200
+            ${
+              isListening
+                ? 'bg-voice-listening shadow-warm-lg animate-voice-pulse'
+                : 'bg-voice-idle shadow-warm-md hover:shadow-warm-lg'
+            }
+          `}
+          aria-label={isListening ? 'Stop listening' : 'Start listening'}
+        >
         {isListening ? (
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -87,24 +88,29 @@ export function VoiceInputController({ onTranscript, onWakeWord }: VoiceInputCon
             />
           </svg>
         )}
+        </button>
 
+        {/* Radiating rings when listening */}
         {isListening && (
-          <span className="absolute -inset-2 rounded-full border-4 border-red-400 animate-ping opacity-75" />
+          <>
+            <span className="absolute inset-0 rounded-full border-4 border-chili-400 animate-voice-ring pointer-events-none" />
+            <span className="absolute inset-0 rounded-full border-4 border-chili-400 animate-voice-ring pointer-events-none" style={{ animationDelay: '0.5s' }} />
+          </>
         )}
-      </button>
+      </div>
 
       <div className="text-center">
         {isListening ? (
           <div>
-            <p className="text-lg font-medium text-gray-900">Listening...</p>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-lg font-medium text-sand-900">Listening...</p>
+            <p className="text-sm text-sand-600 mt-1">
               Say "done" or "that's it" when finished
             </p>
           </div>
         ) : (
           <div>
-            <p className="text-lg font-medium text-gray-900">Tap to start</p>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-lg font-medium text-sand-900">Tap to start</p>
+            <p className="text-sm text-sand-600 mt-1">
               Tell me what's in your fridge
             </p>
           </div>
@@ -112,8 +118,8 @@ export function VoiceInputController({ onTranscript, onWakeWord }: VoiceInputCon
       </div>
 
       {error && (
-        <div className="bg-red-50 border-2 border-red-300 rounded-lg p-4 text-center max-w-md">
-          <p className="text-sm text-red-800">{error}</p>
+        <div className="bg-chili-50 border-2 border-chili-300 rounded-lg p-4 text-center max-w-md">
+          <p className="text-sm text-chili-800">{error}</p>
         </div>
       )}
     </div>

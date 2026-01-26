@@ -203,12 +203,12 @@ export function IngredientCollectionPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-32">
+    <div className="min-h-screen bg-cream bg-kitchen-pattern pb-32">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
+      <header className="bg-header-gradient shadow-warm-md sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">What's in your fridge?</h1>
-          <p className="text-sm text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-white font-display">What's in your fridge?</h1>
+          <p className="text-sm text-terra-50 mt-1">
             Tell me your ingredients and I'll plan your meals
           </p>
         </div>
@@ -227,15 +227,15 @@ export function IngredientCollectionPage() {
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
         {/* Error Display */}
         {error && (
-          <div className="bg-red-50 border-2 border-red-300 rounded-lg p-4">
-            <p className="text-sm text-red-800">{error}</p>
+          <div className="bg-chili-50 border-2 border-chili-300 rounded-lg p-4">
+            <p className="text-sm text-chili-800">{error}</p>
           </div>
         )}
 
         {/* Input Section */}
-        <section className="bg-white rounded-xl shadow-md p-6 space-y-6">
+        <section className="bg-sand-50 border border-sand-200 rounded-xl shadow-warm p-6 space-y-6">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 text-center">
+            <h2 className="text-lg font-semibold text-sand-900 mb-4 text-center">
               Add Ingredients
             </h2>
 
@@ -257,8 +257,8 @@ export function IngredientCollectionPage() {
         </section>
 
         {/* Ingredients List */}
-        <section className="bg-white rounded-xl shadow-md p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Your Ingredients</h2>
+        <section className="bg-sand-50 border border-sand-200 rounded-xl shadow-warm p-6">
+          <h2 className="text-lg font-semibold text-sand-900 mb-4">Your Ingredients</h2>
           <IngredientList
             ingredients={session?.ingredients || []}
             onUpdate={handleUpdateIngredient}
@@ -270,7 +270,7 @@ export function IngredientCollectionPage() {
         {isProcessing && (
           <div className="flex items-center justify-center py-4">
             <svg
-              className="animate-spin h-8 w-8 text-blue-600"
+              className="animate-spin h-8 w-8 text-terra-500"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"

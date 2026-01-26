@@ -25,10 +25,10 @@ export function ConfirmationFooter({
   const hasIngredients = ingredientCount > 0;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 shadow-lg p-4 safe-area-inset-bottom">
+    <div className="fixed bottom-0 left-0 right-0 bg-footer-gradient backdrop-blur-lg border-t border-sand-200 shadow-warm-lg p-4 safe-area-inset-bottom">
       <div className="max-w-2xl mx-auto">
         {hasIngredients && (
-          <p className="text-sm text-gray-600 text-center mb-2">
+          <p className="text-sm text-sand-600 text-center mb-2">
             {ingredientCount} {ingredientCount === 1 ? 'ingredient' : 'ingredients'} ready
           </p>
         )}
@@ -40,8 +40,8 @@ export function ConfirmationFooter({
             w-full py-4 px-6 rounded-lg font-semibold text-lg transition-all
             ${
               hasIngredients && !isLoading
-                ? 'bg-green-600 hover:bg-green-700 text-white shadow-md active:scale-95'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                ? 'bg-herb-500 hover:bg-herb-600 text-white shadow-herb-glow hover:shadow-warm-xl active:scale-95'
+                : 'bg-sand-300 text-sand-500 cursor-not-allowed'
             }
           `}
         >
@@ -75,7 +75,7 @@ export function ConfirmationFooter({
         </button>
 
         {!hasIngredients && (
-          <p className="text-xs text-gray-500 text-center mt-2">
+          <p className="text-xs text-sand-500 text-center mt-2">
             Add ingredients to continue
           </p>
         )}

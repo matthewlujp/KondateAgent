@@ -53,9 +53,10 @@ export function IngredientItem({ ingredient, onUpdate, onDelete }: IngredientIte
   return (
     <div
       className={`
-        flex items-center justify-between p-4 rounded-lg border-2 transition-colors
-        ${isLowConfidence ? 'bg-yellow-50 border-yellow-300' : 'bg-white border-gray-200'}
-        ${isEditing ? 'ring-2 ring-blue-500' : ''}
+        flex items-center justify-between p-4 rounded-lg border transition-all
+        animate-slide-up shadow-warm hover:shadow-warm-md
+        ${isLowConfidence ? 'bg-saffron-50 border-saffron-300' : 'bg-white border-sand-200'}
+        ${isEditing ? 'ring-2 ring-terra-500' : ''}
       `}
     >
       {isEditing ? (
@@ -65,7 +66,7 @@ export function IngredientItem({ ingredient, onUpdate, onDelete }: IngredientIte
             value={editName}
             onChange={(e) => setEditName(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-2 py-1 border border-sand-300 rounded focus:outline-none focus:ring-2 focus:ring-terra-500"
             placeholder="Ingredient name"
             autoFocus
           />
@@ -74,19 +75,19 @@ export function IngredientItem({ ingredient, onUpdate, onDelete }: IngredientIte
             value={editQuantity}
             onChange={(e) => setEditQuantity(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-2 py-1 border border-sand-300 rounded focus:outline-none focus:ring-2 focus:ring-terra-500"
             placeholder="Quantity"
           />
           <div className="flex space-x-2">
             <button
               onClick={handleSave}
-              className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+              className="px-3 py-1 bg-herb-500 text-white rounded hover:bg-herb-600 text-sm"
             >
               Save
             </button>
             <button
               onClick={handleCancel}
-              className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm"
+              className="px-3 py-1 bg-sand-200 text-sand-700 rounded hover:bg-sand-300 text-sm"
             >
               Cancel
             </button>
@@ -98,20 +99,20 @@ export function IngredientItem({ ingredient, onUpdate, onDelete }: IngredientIte
             className="flex-1 cursor-pointer"
             onClick={() => setIsEditing(true)}
           >
-            <div className="font-medium text-gray-900">{ingredient.name}</div>
-            <div className="text-sm text-gray-600">
+            <div className="font-medium text-sand-900">{ingredient.name}</div>
+            <div className="text-sm text-sand-600">
               {ingredient.quantity}
               {ingredient.unit && ` ${ingredient.unit}`}
             </div>
             {isLowConfidence && (
-              <div className="text-xs text-yellow-700 mt-1">
+              <div className="text-xs text-saffron-700 mt-1">
                 Tap to verify
               </div>
             )}
           </div>
           <button
             onClick={() => onDelete(ingredient.id)}
-            className="ml-4 p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
+            className="ml-4 p-2 text-sand-400 hover:text-chili-600 hover:bg-chili-50 rounded-full transition-colors"
             aria-label="Delete ingredient"
           >
             <svg

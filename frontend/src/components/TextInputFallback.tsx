@@ -45,7 +45,7 @@ export function TextInputFallback({ onSubmit, isExpanded, onToggle }: TextInputF
       <div className="text-center">
         <button
           onClick={onToggle}
-          className="text-blue-600 hover:text-blue-700 font-medium text-sm underline"
+          className="text-terra-600 hover:text-terra-700 font-medium text-sm underline"
         >
           Type instead
         </button>
@@ -54,14 +54,14 @@ export function TextInputFallback({ onSubmit, isExpanded, onToggle }: TextInputF
   }
 
   return (
-    <div className="border-2 border-gray-300 rounded-lg p-4 bg-white">
+    <div className="border-2 border-sand-300 rounded-lg p-4 bg-white/80 backdrop-blur-sm animate-scale-in">
       <div className="flex items-center justify-between mb-2">
-        <label htmlFor="text-input" className="text-sm font-medium text-gray-700">
+        <label htmlFor="text-input" className="text-sm font-medium text-sand-700">
           Type your ingredients
         </label>
         <button
           onClick={onToggle}
-          className="text-gray-500 hover:text-gray-700"
+          className="text-sand-500 hover:text-sand-700"
           aria-label="Close text input"
         >
           <svg
@@ -87,25 +87,25 @@ export function TextInputFallback({ onSubmit, isExpanded, onToggle }: TextInputF
         onChange={(e) => setText(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="e.g., 2 chicken breasts, 1 onion, 3 tomatoes..."
-        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+        className="w-full px-3 py-2 border border-sand-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-terra-500 resize-none"
         rows={4}
       />
 
       <div className="flex items-center justify-between mt-3">
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-sand-500">
           Press Cmd+Enter to submit
         </p>
         <div className="flex space-x-2">
           <button
             onClick={handleClear}
-            className="px-3 py-1.5 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            className="px-3 py-1.5 text-sm text-sand-700 bg-sand-100 hover:bg-sand-200 rounded-lg transition-colors"
             disabled={!text.trim()}
           >
             Clear
           </button>
           <button
             onClick={handleSubmit}
-            className="px-4 py-1.5 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+            className="px-4 py-1.5 text-sm text-white bg-herb-500 hover:bg-herb-600 rounded-lg transition-colors disabled:bg-sand-300 disabled:cursor-not-allowed"
             disabled={!text.trim()}
           >
             Add Ingredients
