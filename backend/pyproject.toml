@@ -3,7 +3,16 @@ name = "kondate-agent"
 version = "0.1.0"
 description = "AI-powered meal planning from your fridge ingredients"
 requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.12.5",
+]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+    "pytest-asyncio>=1.3.0",
+]
