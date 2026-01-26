@@ -42,6 +42,13 @@ export function useVoiceInput(options: UseVoiceInputOptions = {}): UseVoiceInput
   const [error, setError] = useState<string | null>(null);
 
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const shouldBeListeningRef = useRef(false); // Track if user wants to listen
+
+  // Store callbacks in refs so the event-handler effect doesn't depend on them
+  const onTranscriptRef = useRef(onTranscript);
+  const onWakeWordRef = useRef(onWakeWord);
+  useEffect(() => { onTranscriptRef.current = onTranscript; }, [onTranscript]);
+  useEffect(() => { onWakeWordRef.current = onWakeWord; }, [onWakeWord]);
 
   // Check browser support on mount
   useEffect(() => {
@@ -95,16 +102,16 @@ export function useVoiceInput(options: UseVoiceInputOptions = {}): UseVoiceInput
 
         // Check for wake words
         if (checkForWakeWords(transcript)) {
-          if (onWakeWord) {
-            onWakeWord();
+          if (onWakeWordRef.current) {
+            onWakeWordRef.current();
           }
           // Don't pass wake word to transcript handler
           return;
         }
 
         // Pass transcript to handler
-        if (onTranscript) {
-          onTranscript(transcript);
+        if (onTranscriptRef.current) {
+          onTranscriptRef.current(transcript);
         }
       }
     };
@@ -113,12 +120,15 @@ export function useVoiceInput(options: UseVoiceInputOptions = {}): UseVoiceInput
       const errorEvent = event as SpeechRecognitionErrorEvent;
       const errorType = errorEvent.error;
 
+      // For "no-speech" errors, don't stop - just continue listening
+      if (errorType === 'no-speech') {
+        // Don't show error, don't stop listening - this is normal
+        return;
+      }
+
       // Map error types to user-friendly messages
       let errorMessage: string;
       switch (errorType) {
-        case 'no-speech':
-          errorMessage = 'No speech detected. Please try again.';
-          break;
         case 'audio-capture':
           errorMessage = 'No microphone found. Please ensure your microphone is connected.';
           break;
@@ -140,10 +150,21 @@ export function useVoiceInput(options: UseVoiceInputOptions = {}): UseVoiceInput
 
       setError(errorMessage);
       setIsListening(false);
+      shouldBeListeningRef.current = false;
     };
 
     const handleEnd = () => {
       setIsListening(false);
+
+      // Auto-restart if user still wants to listen
+      if (shouldBeListeningRef.current && recognitionRef.current) {
+        try {
+          recognitionRef.current.start();
+        } catch (err) {
+          // Ignore "already started" errors during restart
+          console.log('Restart attempt:', err);
+        }
+      }
     };
 
     const handleStart = () => {
@@ -164,7 +185,7 @@ export function useVoiceInput(options: UseVoiceInputOptions = {}): UseVoiceInput
       recognition.removeEventListener('end', handleEnd);
       recognition.removeEventListener('start', handleStart);
     };
-  }, [onTranscript, onWakeWord, checkForWakeWords]);
+  }, [checkForWakeWords]);
 
   const startListening = useCallback(() => {
     if (!isSupported) {
@@ -179,6 +200,7 @@ export function useVoiceInput(options: UseVoiceInputOptions = {}): UseVoiceInput
 
     try {
       setError(null);
+      shouldBeListeningRef.current = true;
       recognitionRef.current.start();
     } catch (err) {
       if (err instanceof Error) {
@@ -195,6 +217,7 @@ export function useVoiceInput(options: UseVoiceInputOptions = {}): UseVoiceInput
   }, [isSupported]);
 
   const stopListening = useCallback(() => {
+    shouldBeListeningRef.current = false;
     if (recognitionRef.current && isListening) {
       try {
         recognitionRef.current.stop();
