@@ -2,6 +2,7 @@ import pytest
 from httpx import AsyncClient, ASGITransport
 from unittest.mock import AsyncMock, patch
 
+from app.auth import create_access_token
 from app.main import app
 from app.models import Ingredient
 from app.services.ingredient_parser import ParsedIngredientList, ParsedIngredient
@@ -21,6 +22,10 @@ class TestFullFlow:
         5. Verify latest session retrieval
         """
         user_id = "integration-test-user"
+
+        # Create auth token for the user
+        token = create_access_token(user_id)
+        headers = {"Authorization": f"Bearer {token}"}
 
         # Mock OpenAI response for ingredient parsing
         mock_parsed_response = ParsedIngredientList(
@@ -51,8 +56,9 @@ class TestFullFlow:
         ) as client:
             # Step 1: Create a new session
             create_response = await client.post(
-                "/api/ingredients/session",
-                json={"user_id": user_id}
+                "/api/ingredients/sessions",
+                json={"user_id": user_id},
+                headers=headers,
             )
             assert create_response.status_code == 201
             session_data = create_response.json()
@@ -65,7 +71,7 @@ class TestFullFlow:
             with patch("app.services.ingredient_parser.openai_client") as mock_client:
                 mock_client.beta.chat.completions.parse = AsyncMock(
                     return_value=AsyncMock(
-                        choices=[AsyncMock(message=AsyncMock(parsed=mock_parsed_response))]
+                        choices=[AsyncMock(message=AsyncMock(refusal=None, parsed=mock_parsed_response))]
                     )
                 )
 
@@ -83,12 +89,10 @@ class TestFullFlow:
                 parsed_ingredients = parsed_data["ingredients"]
 
             # Step 3: Add parsed ingredients to session
-            add_response = await client.patch(
-                f"/api/ingredients/session/{session_id}",
-                json={
-                    "action": "add_ingredients",
-                    "ingredients": parsed_ingredients
-                }
+            add_response = await client.post(
+                f"/api/ingredients/sessions/{session_id}/ingredients",
+                json={"ingredients": parsed_ingredients},
+                headers=headers,
             )
             assert add_response.status_code == 200
             updated_session = add_response.json()
@@ -100,11 +104,9 @@ class TestFullFlow:
 
             # Step 4: Confirm session status
             confirm_response = await client.patch(
-                f"/api/ingredients/session/{session_id}",
-                json={
-                    "action": "update_status",
-                    "status": "confirmed"
-                }
+                f"/api/ingredients/sessions/{session_id}/status",
+                json={"status": "confirmed"},
+                headers=headers,
             )
             assert confirm_response.status_code == 200
             confirmed_session = confirm_response.json()
@@ -113,7 +115,8 @@ class TestFullFlow:
 
             # Step 5: Verify latest session retrieval
             latest_response = await client.get(
-                f"/api/ingredients/session/latest?user_id={user_id}"
+                f"/api/ingredients/sessions/latest/{user_id}",
+                headers=headers,
             )
             assert latest_response.status_code == 200
             latest_session = latest_response.json()

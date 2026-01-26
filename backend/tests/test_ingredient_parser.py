@@ -20,7 +20,7 @@ async def test_parse_simple_ingredients(mock_openai_response):
     with patch("app.services.ingredient_parser.openai_client") as mock_client:
         mock_client.beta.chat.completions.parse = AsyncMock(
             return_value=AsyncMock(
-                choices=[AsyncMock(message=AsyncMock(parsed=mock_openai_response))]
+                choices=[AsyncMock(message=AsyncMock(refusal=None, parsed=mock_openai_response))]
             )
         )
 
@@ -44,7 +44,7 @@ async def test_parse_preserves_specificity():
     with patch("app.services.ingredient_parser.openai_client") as mock_client:
         mock_client.beta.chat.completions.parse = AsyncMock(
             return_value=AsyncMock(
-                choices=[AsyncMock(message=AsyncMock(parsed=response))]
+                choices=[AsyncMock(message=AsyncMock(refusal=None, parsed=response))]
             )
         )
 
@@ -66,7 +66,7 @@ async def test_parse_handles_vague_quantities():
     with patch("app.services.ingredient_parser.openai_client") as mock_client:
         mock_client.beta.chat.completions.parse = AsyncMock(
             return_value=AsyncMock(
-                choices=[AsyncMock(message=AsyncMock(parsed=response))]
+                choices=[AsyncMock(message=AsyncMock(refusal=None, parsed=response))]
             )
         )
 
@@ -75,3 +75,35 @@ async def test_parse_handles_vague_quantities():
 
         assert result[0].quantity == "some"
         assert result[1].quantity == "half"
+
+
+@pytest.mark.asyncio
+async def test_parse_handles_refusal():
+    """Test that parser returns empty list when OpenAI refuses."""
+    with patch("app.services.ingredient_parser.openai_client") as mock_client:
+        mock_client.beta.chat.completions.parse = AsyncMock(
+            return_value=AsyncMock(
+                choices=[AsyncMock(message=AsyncMock(refusal="I cannot parse this", parsed=None))]
+            )
+        )
+
+        parser = IngredientParser()
+        result = await parser.parse("inappropriate content")
+
+        assert result == []
+
+
+@pytest.mark.asyncio
+async def test_parse_handles_none_parsed():
+    """Test that parser returns empty list when parsed is None."""
+    with patch("app.services.ingredient_parser.openai_client") as mock_client:
+        mock_client.beta.chat.completions.parse = AsyncMock(
+            return_value=AsyncMock(
+                choices=[AsyncMock(message=AsyncMock(refusal=None, parsed=None))]
+            )
+        )
+
+        parser = IngredientParser()
+        result = await parser.parse("unparseable text")
+
+        assert result == []

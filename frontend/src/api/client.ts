@@ -8,3 +8,32 @@ export const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Token management
+const TOKEN_KEY = 'kondateagent_token';
+
+export const tokenManager = {
+  getToken(): string | null {
+    return localStorage.getItem(TOKEN_KEY);
+  },
+  setToken(token: string): void {
+    localStorage.setItem(TOKEN_KEY, token);
+  },
+  clearToken(): void {
+    localStorage.removeItem(TOKEN_KEY);
+  },
+};
+
+// Add request interceptor to include auth token
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = tokenManager.getToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);

@@ -6,7 +6,7 @@ import {
   IngredientList,
   ConfirmationFooter,
 } from '../components';
-import { ingredientsApi } from '../api';
+import { authApi, ingredientsApi, tokenManager } from '../api';
 import type { Ingredient, IngredientSession } from '../types';
 
 /**
@@ -45,11 +45,28 @@ export function IngredientCollectionPage() {
   const USER_ID = 'demo-user';
 
   /**
-   * Check for existing session on mount
+   * Initialize auth token and check for existing session on mount
    */
   useEffect(() => {
-    checkExistingSession();
+    initializeAuth();
   }, []);
+
+  const initializeAuth = async () => {
+    try {
+      // Check if we already have a token
+      const existingToken = tokenManager.getToken();
+      if (!existingToken) {
+        // Get a token for the demo user
+        const tokenResponse = await authApi.getToken(USER_ID);
+        tokenManager.setToken(tokenResponse.access_token);
+      }
+      // Once authenticated, check for existing session
+      await checkExistingSession();
+    } catch (err) {
+      console.error('Failed to initialize auth:', err);
+      setError('Failed to authenticate. Please refresh and try again.');
+    }
+  };
 
   const checkExistingSession = async () => {
     try {

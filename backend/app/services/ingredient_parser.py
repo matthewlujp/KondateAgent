@@ -44,7 +44,9 @@ class IngredientParser:
             response_format=ParsedIngredientList,
         )
 
-        parsed = response.choices[0].message.parsed
+        message = response.choices[0].message
+        if message.refusal or message.parsed is None:
+            return []
 
         return [
             Ingredient(
@@ -54,5 +56,5 @@ class IngredientParser:
                 raw_input=text,
                 confidence=item.confidence,
             )
-            for item in parsed.ingredients
+            for item in message.parsed.ingredients
         ]
