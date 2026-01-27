@@ -5,6 +5,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env")
 
     openai_api_key: str = ""
+    youtube_api_key: str = ""
+    instagram_rapidapi_key: str = ""
 
     # JWT Settings
     jwt_secret_key: str = "dev-secret-key-change-in-production"
