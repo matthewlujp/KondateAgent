@@ -51,20 +51,33 @@ export function IngredientCollectionPage() {
     initializeAuth();
   }, []);
 
-  const initializeAuth = async () => {
+  const initializeAuth = async (retryCount = 0) => {
     try {
-      // Check if we already have a token
-      const existingToken = tokenManager.getToken();
-      if (!existingToken) {
-        // Get a token for the demo user
-        const tokenResponse = await authApi.getToken(USER_ID);
-        tokenManager.setToken(tokenResponse.access_token);
-      }
+      // Ensure we have a valid token
+      await ensureValidToken();
+
       // Once authenticated, check for existing session
       await checkExistingSession();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to initialize auth:', err);
+
+      // If we get a 401 and haven't retried yet, clear token and retry once
+      if (err.response?.status === 401 && retryCount === 0) {
+        console.log('Token invalid, getting fresh token and retrying...');
+        tokenManager.clearToken();
+        return initializeAuth(1);
+      }
+
       setError('Failed to authenticate. Please refresh and try again.');
+    }
+  };
+
+  const ensureValidToken = async () => {
+    const existingToken = tokenManager.getToken();
+    if (!existingToken) {
+      // Get a token for the demo user
+      const tokenResponse = await authApi.getToken(USER_ID);
+      tokenManager.setToken(tokenResponse.access_token);
     }
   };
 
@@ -78,9 +91,15 @@ export function IngredientCollectionPage() {
         // No existing session or session is completed, create new
         await createNewSession();
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to check existing session:', err);
-      // If check fails, create new session anyway
+
+      // If it's an auth error (401), let it bubble up to trigger token refresh
+      if (err.response?.status === 401) {
+        throw err;
+      }
+
+      // For other errors (like 404), try to create new session
       await createNewSession();
     }
   };
@@ -89,8 +108,14 @@ export function IngredientCollectionPage() {
     try {
       const newSession = await ingredientsApi.createSession(USER_ID);
       setSession(newSession);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to create session:', err);
+
+      // If it's an auth error (401), let it bubble up to trigger token refresh
+      if (err.response?.status === 401) {
+        throw err;
+      }
+
       setError('Failed to start session. Please refresh and try again.');
     }
   };
