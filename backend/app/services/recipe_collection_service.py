@@ -1,5 +1,6 @@
 from datetime import datetime, UTC, timedelta
-from typing import Optional
+from typing import Optional, Callable, Awaitable
+from dataclasses import dataclass
 import asyncio
 
 from app.models.recipe import Recipe
@@ -10,6 +11,19 @@ from app.services.youtube_client import YouTubeClient, YouTubeAPIError
 from app.services.instagram_client import InstagramClient, InstagramAPIError
 from app.services.description_parser import DescriptionParser
 from app.services.recipe_matcher import RecipeMatcher, RecipeMatchScore
+
+
+@dataclass
+class ProgressEvent:
+    """Progress event emitted during recipe search."""
+
+    step: int  # Current step (1-5)
+    total_steps: int  # Total steps (always 5)
+    phase: str  # Phase name: generating_queries, searching_platforms, parsing_recipes, scoring, finalizing
+    message: str  # Human-readable progress message
+
+
+ProgressCallback = Callable[[ProgressEvent], Awaitable[None]]
 
 
 class ScoredRecipe:
@@ -42,6 +56,7 @@ class RecipeCollectionService:
         user_id: str,
         ingredients: list[str],
         max_results: int = 15,
+        on_progress: Optional[ProgressCallback] = None,
     ) -> list[ScoredRecipe]:
         """
         Search for recipes matching user's ingredients.
@@ -50,6 +65,7 @@ class RecipeCollectionService:
             user_id: User identifier
             ingredients: List of ingredient names user has
             max_results: Maximum number of top recipes to return
+            on_progress: Optional callback for progress updates
 
         Returns:
             List of ScoredRecipe ordered by match score (best first)
@@ -58,6 +74,16 @@ class RecipeCollectionService:
             Exception: If both YouTube and Instagram fail
         """
         # Step 1: Generate search queries
+        if on_progress:
+            await on_progress(
+                ProgressEvent(
+                    step=1,
+                    total_steps=5,
+                    phase="generating_queries",
+                    message="Generating search queries from your ingredients...",
+                )
+            )
+
         queries = await self.query_generator.generate(ingredients)
         all_queries = queries.direct_queries + queries.dish_suggestions
 
@@ -74,6 +100,16 @@ class RecipeCollectionService:
         ]
 
         # Step 3: Search both platforms in parallel
+        if on_progress:
+            await on_progress(
+                ProgressEvent(
+                    step=2,
+                    total_steps=5,
+                    phase="searching_platforms",
+                    message="Searching YouTube and Instagram for recipes...",
+                )
+            )
+
         youtube_results, instagram_results = await self._search_all_platforms(
             all_queries, youtube_channels, instagram_accounts
         )
@@ -82,15 +118,46 @@ class RecipeCollectionService:
             raise Exception("No recipes found from any source")
 
         # Step 4: Convert to Recipe objects (with caching)
+        result_count = len(youtube_results) + len(instagram_results)
+        if on_progress:
+            await on_progress(
+                ProgressEvent(
+                    step=3,
+                    total_steps=5,
+                    phase="parsing_recipes",
+                    message=f"Parsing {result_count} recipe descriptions...",
+                )
+            )
+
         recipes = await self._convert_to_recipes(youtube_results, instagram_results)
 
         if not recipes:
             return []
 
         # Step 5: Score recipes against user ingredients
+        if on_progress:
+            await on_progress(
+                ProgressEvent(
+                    step=4,
+                    total_steps=5,
+                    phase="scoring",
+                    message="Scoring recipes against your ingredients...",
+                )
+            )
+
         scored_recipes = await self._score_recipes(recipes, ingredients)
 
         # Step 6: Sort by score and return top N
+        if on_progress:
+            await on_progress(
+                ProgressEvent(
+                    step=5,
+                    total_steps=5,
+                    phase="finalizing",
+                    message="Finalizing top recipe matches...",
+                )
+            )
+
         scored_recipes.sort(key=lambda sr: sr.score.coverage_score, reverse=True)
         return scored_recipes[:max_results]
 

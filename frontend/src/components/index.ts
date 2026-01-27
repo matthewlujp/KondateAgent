@@ -8,3 +8,4 @@ export { VoiceInputController } from './VoiceInputController';
 export { TextInputFallback } from './TextInputFallback';
 export { ConfirmationFooter } from './ConfirmationFooter';
 export { SessionStartModal } from './SessionStartModal';
+export { RecipeSearchProgress } from './RecipeSearchProgress';

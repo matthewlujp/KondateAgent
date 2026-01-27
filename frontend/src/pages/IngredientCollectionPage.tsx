@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   SessionStartModal,
   VoiceInputController,
   TextInputFallback,
   IngredientList,
   ConfirmationFooter,
+  RecipeSearchProgress,
 } from '../components';
-import { authApi, ingredientsApi, tokenManager } from '../api';
-import type { Ingredient, IngredientSession } from '../types';
+import { authApi, ingredientsApi, streamRecipeSearch, tokenManager } from '../api';
+import type { Ingredient, IngredientSession, ProgressEvent, ScoredRecipe } from '../types';
 
 /**
  * IngredientCollectionPage Component
@@ -40,6 +41,14 @@ export function IngredientCollectionPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Recipe search state
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchProgress, setSearchProgress] = useState<ProgressEvent | null>(null);
+  const [searchComplete, setSearchComplete] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [searchResults, setSearchResults] = useState<ScoredRecipe[]>([]);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   // For demo purposes, use a hardcoded user ID
   // In production, this would come from auth context
   const USER_ID = 'demo-user';
@@ -49,6 +58,17 @@ export function IngredientCollectionPage() {
    */
   useEffect(() => {
     initializeAuth();
+  }, []);
+
+  /**
+   * Cleanup: abort streaming on unmount
+   */
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, []);
 
   const initializeAuth = async (retryCount = 0) => {
@@ -220,7 +240,7 @@ export function IngredientCollectionPage() {
   };
 
   /**
-   * Confirm ingredients and move to meal planning
+   * Confirm ingredients and start recipe search with streaming progress
    */
   const handleConfirm = async () => {
     if (!session || session.ingredients.length === 0) return;
@@ -229,18 +249,47 @@ export function IngredientCollectionPage() {
     setError(null);
 
     try {
+      // First, confirm the session status
       await ingredientsApi.updateStatus(session.id, 'confirmed');
+      setIsProcessing(false);
 
-      // In a real app, navigate to meal planning page
-      // For now, just show a success message
-      alert('Ingredients confirmed! Ready for meal planning.');
+      // Reset search state
+      setSearchProgress(null);
+      setSearchComplete(false);
+      setSearchError(null);
+      setSearchResults([]);
+      setIsSearching(true);
 
-      // Reset to create a new session for next time
-      await createNewSession();
+      // Extract ingredient names
+      const ingredientNames = session.ingredients.map((ing) => ing.name);
+
+      // Start streaming recipe search
+      const controller = await streamRecipeSearch({
+        ingredients: ingredientNames,
+        maxResults: 15,
+        onProgress: (progress) => {
+          setSearchProgress(progress);
+        },
+        onResult: (recipes) => {
+          setSearchResults(recipes);
+          setSearchComplete(true);
+          setIsSearching(false);
+          console.log('Recipe search complete:', recipes);
+          // TODO: Navigate to meal planning page with results
+        },
+        onError: (errorMessage) => {
+          setSearchError(errorMessage);
+          setIsSearching(false);
+        },
+      });
+
+      // Store controller for cleanup
+      abortControllerRef.current = controller;
     } catch (err) {
       console.error('Failed to confirm ingredients:', err);
       setError('Failed to confirm ingredients. Please try again.');
       setIsProcessing(false);
+      setIsSearching(false);
     }
   };
 
@@ -308,8 +357,8 @@ export function IngredientCollectionPage() {
           />
         </section>
 
-        {/* Processing Indicator */}
-        {isProcessing && (
+        {/* Processing Indicator (non-search) */}
+        {isProcessing && !isSearching && (
           <div className="flex items-center justify-center py-4">
             <svg
               className="animate-spin h-8 w-8 text-terra-500"
@@ -333,13 +382,63 @@ export function IngredientCollectionPage() {
             </svg>
           </div>
         )}
+
+        {/* Recipe Search Progress */}
+        {(isSearching || searchComplete || searchError) && (
+          <RecipeSearchProgress
+            currentProgress={searchProgress}
+            isComplete={searchComplete}
+            error={searchError}
+          />
+        )}
+
+        {/* Recipe Search Results */}
+        {searchResults.length > 0 && (
+          <section className="bg-sand-50 border border-sand-200 rounded-xl shadow-warm p-6">
+            <h2 className="text-lg font-semibold text-sand-900 mb-4">
+              Found {searchResults.length} recipes
+            </h2>
+            <ul className="space-y-4">
+              {searchResults.map((sr) => (
+                <li key={sr.recipe.id} className="flex gap-4 items-start">
+                  {sr.recipe.thumbnail_url && (
+                    <img
+                      src={sr.recipe.thumbnail_url}
+                      alt={sr.recipe.title}
+                      className="w-24 h-16 object-cover rounded-lg flex-shrink-0"
+                    />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <a
+                      href={sr.recipe.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-medium text-terra-700 hover:underline line-clamp-2"
+                    >
+                      {sr.recipe.title}
+                    </a>
+                    <p className="text-xs text-sand-600 mt-1">
+                      {sr.recipe.creator_name} &middot;{' '}
+                      {Math.round(sr.coverage_score * 100)}% match
+                    </p>
+                    {sr.missing_ingredients.length > 0 && (
+                      <p className="text-xs text-chili-600 mt-0.5">
+                        Need: {sr.missing_ingredients.join(', ')}
+                      </p>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
       </main>
 
       {/* Confirmation Footer */}
       <ConfirmationFooter
         ingredientCount={session?.ingredients.length || 0}
         onConfirm={handleConfirm}
-        isLoading={isProcessing}
+        isLoading={isProcessing || isSearching}
       />
     </div>
   );
