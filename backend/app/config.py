@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     enable_youtube_source: bool = True
     enable_instagram_source: bool = True
 
+    # Logging configuration
+    log_level: str = "INFO"
+
     # JWT Settings
     jwt_secret_key: str = "dev-secret-key-change-in-production"
     jwt_algorithm: str = "HS256"
