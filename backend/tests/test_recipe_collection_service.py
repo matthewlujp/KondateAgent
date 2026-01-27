@@ -488,3 +488,87 @@ async def test_search_recipes_limits_results(service, mock_query_generator, mock
         assert len(results) == 5
         # Should be sorted by score (best first)
         assert results[0].score.coverage_score > results[4].score.coverage_score
+
+
+@pytest.mark.asyncio
+async def test_search_all_platforms_youtube_only(service, mock_youtube_results, mock_instagram_results):
+    """Test _search_all_platforms with only YouTube enabled."""
+    with patch("app.services.recipe_collection_service.settings") as mock_settings:
+        mock_settings.enable_youtube_source = True
+        mock_settings.enable_instagram_source = False
+
+        service._search_youtube = AsyncMock(return_value=mock_youtube_results)
+        service._search_instagram = AsyncMock(return_value=mock_instagram_results)
+
+        queries = ["chicken recipe"]
+        yt_results, ig_results = await service._search_all_platforms(queries, [], [])
+
+        # YouTube should be called
+        service._search_youtube.assert_called_once_with(queries, [])
+        # Instagram should NOT be called
+        service._search_instagram.assert_not_called()
+
+        assert yt_results == mock_youtube_results
+        assert ig_results == []
+
+
+@pytest.mark.asyncio
+async def test_search_all_platforms_instagram_only(service, mock_youtube_results, mock_instagram_results):
+    """Test _search_all_platforms with only Instagram enabled."""
+    with patch("app.services.recipe_collection_service.settings") as mock_settings:
+        mock_settings.enable_youtube_source = False
+        mock_settings.enable_instagram_source = True
+
+        service._search_youtube = AsyncMock(return_value=mock_youtube_results)
+        service._search_instagram = AsyncMock(return_value=mock_instagram_results)
+
+        queries = ["chicken recipe"]
+        yt_results, ig_results = await service._search_all_platforms(queries, [], [])
+
+        # YouTube should NOT be called
+        service._search_youtube.assert_not_called()
+        # Instagram should be called
+        service._search_instagram.assert_called_once_with(queries, [])
+
+        assert yt_results == []
+        assert ig_results == mock_instagram_results
+
+
+@pytest.mark.asyncio
+async def test_search_all_platforms_both_enabled(service, mock_youtube_results, mock_instagram_results):
+    """Test _search_all_platforms with both sources enabled (existing behavior)."""
+    with patch("app.services.recipe_collection_service.settings") as mock_settings:
+        mock_settings.enable_youtube_source = True
+        mock_settings.enable_instagram_source = True
+
+        service._search_youtube = AsyncMock(return_value=mock_youtube_results)
+        service._search_instagram = AsyncMock(return_value=mock_instagram_results)
+
+        queries = ["chicken recipe"]
+        yt_results, ig_results = await service._search_all_platforms(queries, [], [])
+
+        # Both should be called
+        service._search_youtube.assert_called_once_with(queries, [])
+        service._search_instagram.assert_called_once_with(queries, [])
+
+        assert yt_results == mock_youtube_results
+        assert ig_results == mock_instagram_results
+
+
+@pytest.mark.asyncio
+async def test_search_all_platforms_handles_exceptions_with_disabled_source(service, mock_youtube_results):
+    """Test exception handling when one source is disabled and other fails."""
+    with patch("app.services.recipe_collection_service.settings") as mock_settings:
+        mock_settings.enable_youtube_source = True
+        mock_settings.enable_instagram_source = False
+
+        service._search_youtube = AsyncMock(side_effect=Exception("API error"))
+        service._search_instagram = AsyncMock()
+
+        queries = ["chicken recipe"]
+        yt_results, ig_results = await service._search_all_platforms(queries, [], [])
+
+        # Should handle exception gracefully
+        assert yt_results == []
+        assert ig_results == []
+        service._search_instagram.assert_not_called()

@@ -2,6 +2,7 @@ from datetime import datetime, UTC, timedelta
 from typing import Optional, Callable, Awaitable
 from dataclasses import dataclass
 import asyncio
+import logging
 
 from app.models.recipe import Recipe
 from app.services.creator_store import creator_store
@@ -11,6 +12,9 @@ from app.services.youtube_client import YouTubeClient, YouTubeAPIError
 from app.services.instagram_client import InstagramClient, InstagramAPIError
 from app.services.description_parser import DescriptionParser
 from app.services.recipe_matcher import RecipeMatcher, RecipeMatchScore
+from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -167,25 +171,44 @@ class RecipeCollectionService:
         youtube_channels: list[str],
         instagram_accounts: list[str],
     ) -> tuple[list, list]:
-        """
-        Search YouTube and Instagram in parallel.
+        """Search enabled platforms in parallel."""
 
-        Returns:
-            Tuple of (youtube_results, instagram_results)
-        """
-        youtube_task = self._search_youtube(queries, youtube_channels)
-        instagram_task = self._search_instagram(queries, instagram_accounts)
+        # Log which sources are enabled/disabled
+        if not settings.enable_youtube_source:
+            logger.info("YouTube source is disabled")
+        if not settings.enable_instagram_source:
+            logger.info("Instagram source is disabled")
 
-        youtube_results, instagram_results = await asyncio.gather(
-            youtube_task, instagram_task, return_exceptions=True
-        )
+        # Build task list for enabled sources
+        tasks = []
+        task_sources = []  # Track which source each task belongs to
 
-        # Handle exceptions
-        if isinstance(youtube_results, Exception):
-            youtube_results = []
+        if settings.enable_youtube_source:
+            tasks.append(self._search_youtube(queries, youtube_channels))
+            task_sources.append("youtube")
 
-        if isinstance(instagram_results, Exception):
-            instagram_results = []
+        if settings.enable_instagram_source:
+            tasks.append(self._search_instagram(queries, instagram_accounts))
+            task_sources.append("instagram")
+
+        # Gather all enabled tasks in parallel
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        # Map results back to youtube/instagram
+        youtube_results = []
+        instagram_results = []
+
+        for i, source in enumerate(task_sources):
+            result = results[i]
+            # Handle exceptions
+            if isinstance(result, Exception):
+                logger.warning(f"{source.capitalize()} search failed: {result}")
+                result = []
+
+            if source == "youtube":
+                youtube_results = result
+            elif source == "instagram":
+                instagram_results = result
 
         return youtube_results, instagram_results
 
