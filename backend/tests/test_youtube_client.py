@@ -146,7 +146,7 @@ async def test_search_videos_no_api_key():
     with pytest.raises(YouTubeAPIError) as exc_info:
         await client.search_videos("test")
 
-    assert "API key not configured" in str(exc_info.value)
+    assert "YouTube API key not configured" in str(exc_info.value)
 
 
 @pytest.mark.asyncio

@@ -105,7 +105,7 @@ async def test_search_posts_no_api_key():
     with pytest.raises(InstagramAPIError) as exc_info:
         await client.search_posts("test")
 
-    assert "API key not configured" in str(exc_info.value)
+    assert "Instagram RapidAPI key not configured" in str(exc_info.value)
 
 
 @pytest.mark.asyncio

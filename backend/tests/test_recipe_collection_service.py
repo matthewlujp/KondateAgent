@@ -145,10 +145,15 @@ async def test_search_recipes_youtube_fails_instagram_succeeds(
     """Test graceful degradation when YouTube fails."""
     service.query_generator = mock_query_generator
 
-    with patch.object(service, '_search_youtube', side_effect=Exception("YouTube down")), \
+    with patch('app.services.recipe_collection_service.settings') as mock_settings, \
+         patch.object(service, '_search_youtube', side_effect=Exception("YouTube down")), \
          patch.object(service, '_search_instagram', return_value=mock_instagram_results), \
          patch.object(service, '_convert_to_recipes') as mock_convert, \
          patch.object(service, '_score_recipes') as mock_score:
+
+        # Mock settings to have Instagram enabled
+        mock_settings.enabled_sources = ["youtube", "instagram"]
+        mock_settings.enable_instagram_source = True
 
         now = datetime.now(UTC)
         mock_recipes = [

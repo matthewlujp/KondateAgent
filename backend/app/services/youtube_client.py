@@ -48,7 +48,7 @@ class YouTubeClient:
     BASE_URL = "https://www.googleapis.com/youtube/v3"
 
     def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or settings.youtube_api_key
+        self.api_key = api_key if api_key is not None else settings.youtube_api_key
         self.client = httpx.AsyncClient(timeout=30.0)
 
     async def search_videos(

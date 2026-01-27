@@ -53,7 +53,7 @@ class InstagramClient:
     BASE_URL = "https://instagram-scraper-api2.p.rapidapi.com"
 
     def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or settings.instagram_rapidapi_key
+        self.api_key = api_key if api_key is not None else settings.instagram_rapidapi_key
         self.client = httpx.AsyncClient(
             timeout=30.0,
             headers={

@@ -1,3 +1,4 @@
+import os
 import pytest
 from unittest.mock import patch
 from app.config import Settings
@@ -5,15 +6,19 @@ from app.config import Settings
 
 def test_default_sources_enabled():
     """Test that both sources are enabled by default."""
-    settings = Settings()
-    assert settings.enable_youtube_source is True
-    assert settings.enable_instagram_source is True
+    # Create settings without reading .env file by explicitly setting _env_file to None
+    with patch.dict("os.environ", {}, clear=True):
+        settings = Settings(_env_file=None)
+        assert settings.enable_youtube_source is True
+        assert settings.enable_instagram_source is True
 
 
 def test_enabled_sources_property_both():
     """Test enabled_sources property returns both sources."""
-    settings = Settings()
-    assert settings.enabled_sources == ["youtube", "instagram"]
+    # Create settings without reading .env file by explicitly setting _env_file to None
+    with patch.dict("os.environ", {}, clear=True):
+        settings = Settings(_env_file=None)
+        assert settings.enabled_sources == ["youtube", "instagram"]
 
 
 def test_enabled_sources_property_youtube_only():
