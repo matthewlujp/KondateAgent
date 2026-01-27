@@ -121,7 +121,10 @@ class RecipeCollectionService:
         )
 
         if not youtube_results and not instagram_results:
-            raise Exception("No recipes found from any source")
+            enabled = settings.enabled_sources
+            raise Exception(
+                f"No recipes found from enabled sources: {', '.join(enabled)}"
+            )
 
         # Step 4: Convert to Recipe objects (with caching)
         result_count = len(youtube_results) + len(instagram_results)

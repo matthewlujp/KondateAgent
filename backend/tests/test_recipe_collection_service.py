@@ -656,3 +656,30 @@ async def test_collect_progress_message_reflects_enabled_sources_both(
         assert search_event is not None
         assert "youtube" in search_event.message.lower()
         assert "instagram" in search_event.message.lower()
+
+
+@pytest.mark.asyncio
+async def test_collect_error_message_shows_enabled_sources(
+    service, mock_query_generator
+):
+    """Test error message shows which sources were enabled when no results found."""
+    with patch("app.services.recipe_collection_service.settings") as mock_settings, \
+         patch("app.services.recipe_collection_service.creator_store") as mock_store:
+        mock_settings.enable_youtube_source = True
+        mock_settings.enable_instagram_source = False
+        mock_settings.enabled_sources = ["youtube"]
+        mock_store.list_by_user.return_value = []
+
+        service.query_generator = mock_query_generator
+        service._search_all_platforms = AsyncMock(return_value=([], []))
+
+        with pytest.raises(Exception) as exc_info:
+            await service.search_recipes(
+                "test_user",
+                ["chicken", "pasta"],
+                max_results=5,
+            )
+
+        error_message = str(exc_info.value)
+        assert "enabled sources" in error_message.lower()
+        assert "youtube" in error_message.lower()
