@@ -105,12 +105,14 @@ class RecipeCollectionService:
 
         # Step 3: Search both platforms in parallel
         if on_progress:
+            enabled_sources = settings.enabled_sources
+            source_list = " and ".join(enabled_sources)
             await on_progress(
                 ProgressEvent(
                     step=2,
                     total_steps=5,
                     phase="searching_platforms",
-                    message="Searching YouTube and Instagram for recipes...",
+                    message=f"Searching {source_list} for recipes...",
                 )
             )
 

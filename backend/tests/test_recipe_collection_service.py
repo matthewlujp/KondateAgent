@@ -572,3 +572,87 @@ async def test_search_all_platforms_handles_exceptions_with_disabled_source(serv
         assert yt_results == []
         assert ig_results == []
         service._search_instagram.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_collect_progress_message_reflects_enabled_sources_youtube_only(
+    service, mock_query_generator, mock_youtube_results
+):
+    """Test progress message shows only YouTube when Instagram is disabled."""
+    with patch("app.services.recipe_collection_service.settings") as mock_settings, \
+         patch("app.services.recipe_collection_service.creator_store") as mock_store:
+        mock_settings.enable_youtube_source = True
+        mock_settings.enable_instagram_source = False
+        mock_settings.enabled_sources = ["youtube"]
+        mock_store.list_by_user.return_value = []
+
+        service.query_generator = mock_query_generator
+        service._search_all_platforms = AsyncMock(return_value=(mock_youtube_results, []))
+        service._convert_to_recipes = AsyncMock(return_value=[])
+        service._score_recipes = AsyncMock(return_value=[])
+
+        progress_events = []
+
+        async def capture_progress(event):
+            progress_events.append(event)
+
+        try:
+            await service.search_recipes(
+                "test_user",
+                ["chicken", "pasta"],
+                max_results=5,
+                on_progress=capture_progress,
+            )
+        except Exception:
+            pass  # Expected to fail due to empty results
+
+        # Find the searching_platforms progress event
+        search_event = next(
+            (e for e in progress_events if e.phase == "searching_platforms"), None
+        )
+        assert search_event is not None
+        assert "youtube" in search_event.message.lower()
+        assert "instagram" not in search_event.message.lower()
+
+
+@pytest.mark.asyncio
+async def test_collect_progress_message_reflects_enabled_sources_both(
+    service, mock_query_generator, mock_youtube_results, mock_instagram_results
+):
+    """Test progress message shows both sources when both enabled."""
+    with patch("app.services.recipe_collection_service.settings") as mock_settings, \
+         patch("app.services.recipe_collection_service.creator_store") as mock_store:
+        mock_settings.enable_youtube_source = True
+        mock_settings.enable_instagram_source = True
+        mock_settings.enabled_sources = ["youtube", "instagram"]
+        mock_store.list_by_user.return_value = []
+
+        service.query_generator = mock_query_generator
+        service._search_all_platforms = AsyncMock(
+            return_value=(mock_youtube_results, mock_instagram_results)
+        )
+        service._convert_to_recipes = AsyncMock(return_value=[])
+        service._score_recipes = AsyncMock(return_value=[])
+
+        progress_events = []
+
+        async def capture_progress(event):
+            progress_events.append(event)
+
+        try:
+            await service.search_recipes(
+                "test_user",
+                ["chicken", "pasta"],
+                max_results=5,
+                on_progress=capture_progress,
+            )
+        except Exception:
+            pass  # Expected to fail due to empty results
+
+        # Find the searching_platforms progress event
+        search_event = next(
+            (e for e in progress_events if e.phase == "searching_platforms"), None
+        )
+        assert search_event is not None
+        assert "youtube" in search_event.message.lower()
+        assert "instagram" in search_event.message.lower()
