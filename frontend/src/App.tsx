@@ -1,29 +1,26 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { IngredientCollectionPage } from './pages';
+import { IngredientCollectionPage, SettingsPage } from './pages';
 
-/**
- * Create React Query client
- * Configuration for caching and refetching behavior
- */
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
       retry: 1,
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 5 * 60 * 1000,
     },
   },
 });
 
-/**
- * Main App Component
- *
- * Sets up React Query provider and renders the main page.
- */
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <IngredientCollectionPage />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<IngredientCollectionPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+        </Routes>
+      </BrowserRouter>
     </QueryClientProvider>
   );
 }

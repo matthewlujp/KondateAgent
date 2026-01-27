@@ -54,9 +54,9 @@ describe('AddChannelInput', () => {
     expect(onAdd).not.toHaveBeenCalled();
   });
 
-  it('clears input after onClear is called', async () => {
+  it('maintains input value when typing', async () => {
     const user = userEvent.setup();
-    render(<AddChannelInput onAdd={vi.fn()} isLoading={false} error={null} onClear={vi.fn()} />);
+    render(<AddChannelInput onAdd={vi.fn()} isLoading={false} error={null} />);
 
     const input = screen.getByPlaceholderText('Paste YouTube or Instagram URL');
     await user.type(input, 'some text');

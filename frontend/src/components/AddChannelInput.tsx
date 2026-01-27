@@ -5,10 +5,9 @@ interface AddChannelInputProps {
   onAdd: (url: string) => void;
   isLoading: boolean;
   error: string | null;
-  onClear?: () => void;
 }
 
-export function AddChannelInput({ onAdd, isLoading, error, onClear }: AddChannelInputProps) {
+export function AddChannelInput({ onAdd, isLoading, error }: AddChannelInputProps) {
   const [url, setUrl] = useState('');
 
   const handleSubmit = () => {
@@ -25,15 +24,8 @@ export function AddChannelInput({ onAdd, isLoading, error, onClear }: AddChannel
     }
   };
 
-  // Allow parent to clear the input after successful add
-  const clearInput = () => {
-    setUrl('');
-    onClear?.();
-  };
-
-  // Expose clearInput by allowing parent to reset via key prop or effect
-  // For simplicity, we'll let the parent clear error and the input clears on success
-  // via the onAdd callback pattern
+  // Note: The parent can clear errors via the error prop.
+  // The input value is controlled by local state for simplicity.
 
   return (
     <div>
