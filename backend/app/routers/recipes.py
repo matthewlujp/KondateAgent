@@ -169,7 +169,7 @@ async def stream_recipe_search(request: RecipeStreamRequest, current_user: Curre
 
                 elif event_type == "result":
                     # Convert Pydantic models to dicts
-                    result_list = [r.model_dump() for r in event_data]
+                    result_list = [r.model_dump(mode="json") for r in event_data]
                     yield f"event: result\ndata: {json.dumps(result_list)}\n\n"
 
                 elif event_type == "error":
