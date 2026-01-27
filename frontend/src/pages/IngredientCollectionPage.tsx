@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import {
   SessionStartModal,
   VoiceInputController,
@@ -6,8 +8,9 @@ import {
   IngredientList,
   ConfirmationFooter,
   RecipeSearchProgress,
+  ChannelBanner,
 } from '../components';
-import { authApi, ingredientsApi, streamRecipeSearch, tokenManager } from '../api';
+import { authApi, ingredientsApi, streamRecipeSearch, tokenManager, creatorsApi } from '../api';
 import type { Ingredient, IngredientSession, ProgressEvent, ScoredRecipe } from '../types';
 
 /**
@@ -48,6 +51,24 @@ export function IngredientCollectionPage() {
   const [searchError, setSearchError] = useState<string | null>(null);
   const [searchResults, setSearchResults] = useState<ScoredRecipe[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Channel banner state
+  const [bannerDismissed, setBannerDismissed] = useState(() =>
+    localStorage.getItem('channelBannerDismissed') === 'true'
+  );
+
+  const { data: creators = [] } = useQuery({
+    queryKey: ['creators'],
+    queryFn: creatorsApi.getCreators,
+    enabled: !bannerDismissed,
+  });
+
+  const showBanner = !bannerDismissed && creators.length === 0;
+
+  const handleDismissBanner = () => {
+    localStorage.setItem('channelBannerDismissed', 'true');
+    setBannerDismissed(true);
+  };
 
   // For demo purposes, use a hardcoded user ID
   // In production, this would come from auth context
@@ -297,11 +318,23 @@ export function IngredientCollectionPage() {
     <div className="min-h-screen bg-cream bg-kitchen-pattern pb-32">
       {/* Header */}
       <header className="bg-header-gradient shadow-warm-md sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-white font-display">What's in your fridge?</h1>
-          <p className="text-sm text-terra-50 mt-1">
-            Tell me your ingredients and I'll plan your meals
-          </p>
+        <div className="max-w-2xl mx-auto px-4 py-4 flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white font-display">What's in your fridge?</h1>
+            <p className="text-sm text-terra-50 mt-1">
+              Tell me your ingredients and I'll plan your meals
+            </p>
+          </div>
+          <Link
+            to="/settings"
+            className="p-2 text-white hover:bg-white/10 rounded-full transition-colors"
+            aria-label="Settings"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </Link>
         </div>
       </header>
 
@@ -321,6 +354,11 @@ export function IngredientCollectionPage() {
           <div className="bg-chili-50 border-2 border-chili-300 rounded-lg p-4">
             <p className="text-sm text-chili-800">{error}</p>
           </div>
+        )}
+
+        {/* Channel Banner */}
+        {showBanner && (
+          <ChannelBanner onDismiss={handleDismissBanner} />
         )}
 
         {/* Input Section */}

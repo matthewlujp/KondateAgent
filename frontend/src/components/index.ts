@@ -13,3 +13,4 @@ export { ChannelCard } from './ChannelCard';
 export { AddChannelInput } from './AddChannelInput';
 export { ChannelManagementSection } from './ChannelManagementSection';
 export { PlaceholderSection } from './PlaceholderSection';
+export { ChannelBanner } from './ChannelBanner';
