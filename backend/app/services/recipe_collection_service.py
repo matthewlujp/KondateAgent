@@ -3,6 +3,7 @@ from typing import Optional, Callable, Awaitable
 from dataclasses import dataclass
 import asyncio
 import logging
+from colorama import Fore, Style, init as colorama_init
 
 from app.models.recipe import Recipe
 from app.services.creator_store import creator_store
@@ -13,6 +14,9 @@ from app.services.instagram_client import InstagramClient, InstagramAPIError
 from app.services.description_parser import DescriptionParser
 from app.services.recipe_matcher import RecipeMatcher, RecipeMatchScore
 from app.config import settings
+
+# Initialize colorama for cross-platform color support
+colorama_init(autoreset=True)
 
 logger = logging.getLogger(__name__)
 
@@ -215,6 +219,15 @@ class RecipeCollectionService:
             elif source == "instagram":
                 instagram_results = result
 
+        # Summary log of all gathered videos
+        total_count = len(youtube_results) + len(instagram_results)
+        if total_count > 0:
+            logger.debug(f"{Fore.MAGENTA}{'='*80}")
+            logger.debug(f"{Fore.MAGENTA}TOTAL VIDEOS/POSTS GATHERED: {total_count}")
+            logger.debug(f"{Fore.MAGENTA}  - YouTube: {len(youtube_results)} videos")
+            logger.debug(f"{Fore.MAGENTA}  - Instagram: {len(instagram_results)} posts")
+            logger.debug(f"{Fore.MAGENTA}{'='*80}")
+
         return youtube_results, instagram_results
 
     async def _search_youtube(
@@ -258,7 +271,20 @@ class RecipeCollectionService:
                 seen.add(result.video_id)
                 unique_results.append(result)
 
-        return unique_results[:40]  # Cap at 40 results
+        final_results = unique_results[:40]  # Cap at 40 results
+
+        # Verbose debug logging with magenta color
+        if final_results:
+            logger.debug(f"{Fore.MAGENTA}{'='*80}")
+            logger.debug(f"{Fore.MAGENTA}YouTube Videos Gathered ({len(final_results)} videos):")
+            logger.debug(f"{Fore.MAGENTA}{'-'*80}")
+            for idx, result in enumerate(final_results, 1):
+                logger.debug(f"{Fore.MAGENTA}  [{idx:2d}] {result.title}")
+                logger.debug(f"{Fore.MAGENTA}       URL: {result.url}")
+                logger.debug(f"{Fore.MAGENTA}       Channel: {result.channel_name}")
+            logger.debug(f"{Fore.MAGENTA}{'='*80}")
+
+        return final_results
 
     async def _search_instagram(
         self, queries: list[str], preferred_accounts: list[str]
@@ -302,7 +328,21 @@ class RecipeCollectionService:
                 seen.add(result.post_id)
                 unique_results.append(result)
 
-        return unique_results[:40]  # Cap at 40 results
+        final_results = unique_results[:40]  # Cap at 40 results
+
+        # Verbose debug logging with magenta color
+        if final_results:
+            logger.debug(f"{Fore.MAGENTA}{'='*80}")
+            logger.debug(f"{Fore.MAGENTA}Instagram Posts Gathered ({len(final_results)} posts):")
+            logger.debug(f"{Fore.MAGENTA}{'-'*80}")
+            for idx, result in enumerate(final_results, 1):
+                caption_preview = result.caption[:60] + "..." if len(result.caption) > 60 else result.caption
+                logger.debug(f"{Fore.MAGENTA}  [{idx:2d}] {caption_preview}")
+                logger.debug(f"{Fore.MAGENTA}       URL: {result.url}")
+                logger.debug(f"{Fore.MAGENTA}       Account: @{result.account_username}")
+            logger.debug(f"{Fore.MAGENTA}{'='*80}")
+
+        return final_results
 
     async def _convert_to_recipes(
         self, youtube_results: list, instagram_results: list
