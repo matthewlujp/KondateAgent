@@ -33,4 +33,22 @@ describe('detectSource', () => {
   it('returns null for non-URL text', () => {
     expect(detectSource('not a url')).toBeNull();
   });
+
+  it('detects youtu.be short URLs', () => {
+    expect(detectSource('https://youtu.be/dQw4w9WgXcQ')).toBe('youtube');
+  });
+
+  it('is case insensitive', () => {
+    expect(detectSource('https://YOUTUBE.COM/@user')).toBe('youtube');
+    expect(detectSource('https://INSTAGRAM.COM/user')).toBe('instagram');
+  });
+
+  it('does not match fake domains', () => {
+    expect(detectSource('https://fakeyoutube.com/watch')).toBeNull();
+    expect(detectSource('https://not-instagram.com/user')).toBeNull();
+  });
+
+  it('handles URLs with query parameters', () => {
+    expect(detectSource('https://youtube.com/@user?tab=videos')).toBe('youtube');
+  });
 });
