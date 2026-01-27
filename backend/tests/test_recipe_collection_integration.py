@@ -11,6 +11,7 @@ from app.services.description_parser import ParsedRecipeIngredients
 from app.services.recipe_matcher import RecipeMatchScore
 from app.services.youtube_client import YouTubeSearchResult
 from app.services.instagram_client import InstagramSearchResult
+from app.services.recipe_collection_service import RecipeCollectionService
 
 
 class TestRecipeCollectionE2E:
@@ -340,3 +341,102 @@ class TestRecipeCollectionE2E:
                 data2 = response2.json()
                 assert data2["id"] == cached_recipe.id
                 assert data2["title"] == "Cached Recipe"
+
+
+@pytest.mark.asyncio
+async def test_recipe_collection_with_youtube_only():
+    """Integration test: collect recipes with only YouTube enabled."""
+    with patch("app.services.recipe_collection_service.settings") as mock_settings:
+        mock_settings.enable_youtube_source = True
+        mock_settings.enable_instagram_source = False
+        mock_settings.enabled_sources = ["youtube"]
+
+        service = RecipeCollectionService()
+
+        # Mock the YouTube client to return results
+        mock_youtube_result = YouTubeSearchResult(
+            video_id="test_video",
+            title="Test Recipe",
+            thumbnail_url="https://example.com/thumb.jpg",
+            channel_id="UCtest",
+            channel_name="Test Channel",
+            description="Recipe with chicken and pasta",
+            published_at=datetime.now(UTC),
+            duration="PT10M",
+        )
+
+        service.youtube_client.search_videos = AsyncMock(return_value=[mock_youtube_result])
+
+        # Mock Instagram client to ensure it's not called
+        service.instagram_client.search_posts = AsyncMock()
+
+        # Mock description parser
+        service.description_parser.parse = AsyncMock(
+            return_value=ParsedRecipeIngredients(
+                ingredients=["chicken", "pasta"],
+                confidence=0.9,
+            )
+        )
+
+        results = await service.search_recipes(
+            user_id="test_user",
+            ingredients=["chicken", "pasta"],
+            max_results=5,
+        )
+
+        # Verify results contain only YouTube recipes
+        assert len(results) > 0
+        for scored_recipe in results:
+            assert scored_recipe.recipe.source == "youtube"
+
+        # Verify Instagram client was not called
+        service.instagram_client.search_posts.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_recipe_collection_with_instagram_only():
+    """Integration test: collect recipes with only Instagram enabled."""
+    with patch("app.services.recipe_collection_service.settings") as mock_settings:
+        mock_settings.enable_youtube_source = False
+        mock_settings.enable_instagram_source = True
+        mock_settings.enabled_sources = ["instagram"]
+
+        service = RecipeCollectionService()
+
+        # Mock the Instagram client to return results
+        mock_instagram_result = InstagramSearchResult(
+            post_id="test_post",
+            shortcode="test",
+            caption="Test Recipe with chicken and pasta",
+            thumbnail_url="https://example.com/thumb.jpg",
+            account_username="test_user",
+            account_id="12345",
+            posted_at=datetime.now(UTC),
+        )
+
+        service.instagram_client.search_posts = AsyncMock(return_value=[mock_instagram_result])
+
+        # Mock YouTube client to ensure it's not called
+        service.youtube_client.search_videos = AsyncMock()
+
+        # Mock description parser
+        service.description_parser.parse = AsyncMock(
+            return_value=ParsedRecipeIngredients(
+                ingredients=["chicken", "pasta"],
+                confidence=0.9,
+            )
+        )
+
+        results = await service.search_recipes(
+            user_id="test_user",
+            ingredients=["chicken", "pasta"],
+            max_results=5,
+        )
+
+        # Verify results contain only Instagram recipes
+        assert len(results) > 0
+        for scored_recipe in results:
+            assert scored_recipe.recipe.source == "instagram"
+
+        # Verify YouTube client was not called
+        service.youtube_client.search_videos.assert_not_called()
