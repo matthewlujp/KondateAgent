@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { IngredientCollectionPage, SettingsPage } from './pages';
+import { IngredientCollectionPage, SettingsPage, MealPlanPage } from './pages';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -19,6 +19,7 @@ function App() {
         <Routes>
           <Route path="/" element={<IngredientCollectionPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/meal-plan" element={<MealPlanPage />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>
