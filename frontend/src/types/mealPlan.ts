@@ -46,6 +46,7 @@ export interface ChatResponse {
   response: string;
   plan: MealPlan;
   tool_calls: Record<string, unknown>[];
+  recipes: import('./recipe').Recipe[];
 }
 
 export interface GeneratePlanRequest {

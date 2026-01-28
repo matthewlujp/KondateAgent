@@ -33,6 +33,10 @@ class SwapDecision(BaseModel):
     criteria: Optional[str] = Field(
         default=None, description="Criteria for choosing alternative recipe"
     )
+    selected_recipe_id: Optional[str] = Field(
+        default=None,
+        description="ID of the recipe to swap to, chosen from available alternatives based on criteria",
+    )
     response_text: str = Field(description="Natural language response to the user")
 
 
@@ -48,13 +52,22 @@ Your task:
 2. Decide if they're asking for a swap (set should_swap=True/False)
 3. If swapping:
    - Identify the day to swap
-   - Extract criteria for the new recipe (e.g., "lighter", "vegetarian", "different protein")
+   - Extract criteria for the new recipe (e.g., "lighter", "vegetarian", "different protein", "Japanese", "quick")
+   - IMPORTANT: Select the best matching recipe from the available alternatives list based on the criteria
+   - Set selected_recipe_id to the ID of the chosen recipe that best matches the user's request
 4. Provide a friendly response
+
+When selecting a recipe:
+- Match the user's criteria (cuisine type, cooking time, dietary preferences, etc.)
+- Look at recipe titles and descriptions to identify cuisine/style
+- If user asks for "Japanese", choose a recipe with Japanese dish name or description
+- If user asks for "quick", choose simpler recipes with fewer ingredients
 
 If user asks general questions or gives feedback without requesting changes, respond conversationally without swapping.
 
 Examples:
-- User: "Can you swap Tuesday for something lighter?" → should_swap=True, day="tuesday", criteria="lighter meal"
+- User: "Can you swap Tuesday for something lighter?" → should_swap=True, day="tuesday", criteria="lighter meal", selected_recipe_id="<id of lightest recipe>"
+- User: "Change Monday to Japanese" → should_swap=True, day="monday", criteria="Japanese cuisine", selected_recipe_id="<id of Japanese recipe>"
 - User: "I don't like fish" → should_swap=False, response="I'll keep that in mind for future plans!"
 - User: "This looks great!" → should_swap=False, response="Glad you like it!"
 """
@@ -69,6 +82,7 @@ class MealPlanRefinementAgent:
         day: DayOfWeek,
         recipe_pool: list[Recipe],
         criteria: Optional[str],
+        selected_recipe_id: Optional[str] = None,
     ) -> SwapResult:
         """
         Execute a meal swap for a specific day.
@@ -76,12 +90,14 @@ class MealPlanRefinementAgent:
         Finds an alternative recipe that:
         - Is not already assigned to any day in the plan
         - Is different from the current recipe
+        - Matches the selected_recipe_id if provided by LLM
 
         Args:
             plan: Current meal plan
             day: Day to swap
             recipe_pool: Available recipes to choose from
-            criteria: Optional criteria for choosing recipe (future use)
+            criteria: Optional criteria for choosing recipe
+            selected_recipe_id: Optional recipe ID selected by LLM based on criteria
 
         Returns:
             SwapResult with success status and details
@@ -123,9 +139,18 @@ class MealPlanRefinementAgent:
                 message=f"No alternative recipes available for {day}",
             )
 
-        # For now, just pick the first available recipe
-        # Future: use criteria to rank alternatives
-        new_recipe = available_recipes[0]
+        # Use LLM-selected recipe if provided and valid
+        new_recipe = None
+        if selected_recipe_id:
+            for recipe in available_recipes:
+                if recipe.id == selected_recipe_id:
+                    new_recipe = recipe
+                    break
+
+        # Fallback to first available if LLM selection not found
+        if new_recipe is None:
+            new_recipe = available_recipes[0]
+
         old_recipe_id = target_slot.recipe_id
 
         return SwapResult(
@@ -168,6 +193,7 @@ class MealPlanRefinementAgent:
             day=decision.day,
             recipe_pool=recipe_pool,
             criteria=decision.criteria,
+            selected_recipe_id=decision.selected_recipe_id,
         )
 
         if swap_result.success:
@@ -276,14 +302,19 @@ Available alternative recipes:
     def _format_available_recipes(
         self, plan: MealPlan, recipe_pool: list[Recipe]
     ) -> str:
-        """Format available (unassigned) recipes for LLM."""
+        """Format available (unassigned) recipes for LLM with IDs for selection."""
         assigned_ids = {slot.recipe_id for slot in plan.slots if slot.recipe_id}
         available = [r for r in recipe_pool if r.id not in assigned_ids]
 
         if not available:
             return "No additional recipes available"
 
-        lines = [f"- {r.title}" for r in available[:5]]  # Limit to 5
-        if len(available) > 5:
-            lines.append(f"... and {len(available) - 5} more")
+        # Include ID, title, and description to help LLM match criteria
+        lines = []
+        for r in available[:10]:  # Increased limit for better selection
+            desc_preview = r.raw_description[:50] + "..." if len(r.raw_description) > 50 else r.raw_description
+            lines.append(f"- ID: {r.id} | {r.title} | {desc_preview}")
+
+        if len(available) > 10:
+            lines.append(f"... and {len(available) - 10} more")
         return "\n".join(lines)

@@ -127,6 +127,23 @@ export function MealPlanPage() {
       // Update plan with potentially modified slots
       setPlan(response.plan);
 
+      // Merge returned recipes into our local recipe list
+      // This ensures swapped recipes are available for display
+      if (response.recipes && response.recipes.length > 0) {
+        setRecipes((prev) => {
+          const existingIds = new Set(prev.map((sr) => sr.recipe.id));
+          const newRecipes = response.recipes.filter((r) => !existingIds.has(r.id));
+          // Add new recipes with default scores (they're already selected)
+          const newScoredRecipes = newRecipes.map((recipe) => ({
+            recipe,
+            coverage_score: 1.0,
+            missing_ingredients: [],
+            reasoning: 'Selected via chat refinement',
+          }));
+          return [...prev, ...newScoredRecipes];
+        });
+      }
+
       // Add assistant message
       const assistantMessage: ChatMessage = {
         role: 'assistant',

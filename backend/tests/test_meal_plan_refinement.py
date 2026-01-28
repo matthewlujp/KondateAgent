@@ -231,3 +231,103 @@ async def test_process_message_no_swap(sample_plan, sample_recipes):
 
     assert "looks great" in response_text.lower()
     assert len(tool_calls) == 0
+
+
+@pytest.mark.asyncio
+async def test_process_message_respects_criteria(sample_plan):
+    """Test that swap respects user criteria like cuisine type.
+
+    When user asks for "Japanese cuisine", the system should select
+    a Japanese recipe, not just the first available recipe.
+    """
+    agent = MealPlanRefinementAgent()
+
+    now = datetime.now(UTC)
+
+    # Create recipes with different cuisines - put Chinese first to test selection
+    recipes_with_cuisines = [
+        Recipe(
+            id="chinese_recipe",
+            source="youtube",
+            source_id="vid_chinese",
+            url="https://youtube.com/watch?v=chinese",
+            thumbnail_url="https://example.com/chinese.jpg",
+            title="Chinese Kung Pao Chicken",  # Chinese cuisine
+            creator_name="Chef Chinese",
+            creator_id="chef_chinese",
+            extracted_ingredients=["chicken", "peanuts", "chili"],
+            raw_description="Classic Chinese stir fry dish",
+            posted_at=now,
+            cache_expires_at=now + timedelta(days=30),
+        ),
+        Recipe(
+            id="japanese_recipe",
+            source="youtube",
+            source_id="vid_japanese",
+            url="https://youtube.com/watch?v=japanese",
+            thumbnail_url="https://example.com/japanese.jpg",
+            title="Japanese Teriyaki Salmon",  # Japanese cuisine
+            creator_name="Chef Japanese",
+            creator_id="chef_japanese",
+            extracted_ingredients=["salmon", "soy sauce", "mirin"],
+            raw_description="Traditional Japanese teriyaki",
+            posted_at=now,
+            cache_expires_at=now + timedelta(days=30),
+        ),
+        Recipe(
+            id="italian_recipe",
+            source="youtube",
+            source_id="vid_italian",
+            url="https://youtube.com/watch?v=italian",
+            thumbnail_url="https://example.com/italian.jpg",
+            title="Italian Pasta Carbonara",  # Italian cuisine
+            creator_name="Chef Italian",
+            creator_id="chef_italian",
+            extracted_ingredients=["pasta", "eggs", "bacon"],
+            raw_description="Classic Italian pasta",
+            posted_at=now,
+            cache_expires_at=now + timedelta(days=30),
+        ),
+    ]
+
+    # Plan has recipe_1, recipe_2, recipe_3 assigned - none of the above
+    # So all three cuisines are available for swap
+
+    # Mock LLM to decide to swap with Japanese criteria AND select japanese_recipe
+    mock_decision = SwapDecision(
+        should_swap=True,
+        day="monday",
+        criteria="Japanese cuisine",
+        selected_recipe_id="japanese_recipe",  # LLM should select this
+        response_text="I'll swap Monday to a Japanese dish for you.",
+    )
+
+    mock_message = MagicMock()
+    mock_message.parsed = mock_decision
+    mock_message.refusal = None
+
+    mock_response = MagicMock()
+    mock_response.choices = [MagicMock(message=mock_message)]
+
+    with patch(
+        "app.services.meal_plan_refinement.openai_client.beta.chat.completions.parse",
+        new_callable=AsyncMock,
+        return_value=mock_response,
+    ):
+        response_text, tool_calls = await agent.process_message(
+            message="Change Monday to Japanese cuisine",
+            plan=sample_plan,
+            recipe_pool=recipes_with_cuisines,
+            chat_history=[],
+        )
+
+    # Should have performed a swap
+    assert len(tool_calls) == 1
+    assert tool_calls[0]["function"]["name"] == "swap_meal"
+
+    # The swapped recipe should be Japanese, NOT Chinese (even though Chinese was first)
+    assert '"new_recipe": "japanese_recipe"' in tool_calls[0]["function"]["arguments"]
+
+    # Verify the plan was updated correctly
+    monday_slot = next(s for s in sample_plan.slots if s.day == "monday")
+    assert monday_slot.recipe_id == "japanese_recipe"

@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 
 from app.auth import CurrentUser
 from app.models.meal_plan import MealPlan, DayOfWeek, MealSlot, ChatMessage
+from app.models.recipe import Recipe
 from app.services.session_store import session_store
 from app.services.recipe_cache import recipe_cache
 from app.services.meal_plan_store import meal_plan_store
@@ -44,6 +45,10 @@ class ChatResponse(BaseModel):
     response: str
     plan: MealPlan
     tool_calls: list[dict]
+    recipes: list[Recipe] = Field(
+        default_factory=list,
+        description="Full recipe data for all assigned slots, ensuring frontend can display swapped recipes",
+    )
 
 
 # Endpoints
@@ -186,8 +191,17 @@ async def send_chat_message(
     # Save updated plan
     meal_plan_store.save_plan(plan)
 
+    # Gather full recipe data for all assigned slots
+    recipes_for_response = []
+    for slot in plan.slots:
+        if slot.recipe_id:
+            recipe = recipe_cache.get(slot.recipe_id)
+            if recipe:
+                recipes_for_response.append(recipe)
+
     return ChatResponse(
         response=response_text,
         plan=plan,
         tool_calls=tool_calls,
+        recipes=recipes_for_response,
     )

@@ -62,6 +62,7 @@ describe('mealPlansApi', () => {
       response: "I'll swap Monday's meal for you.",
       plan: mockPlan,
       tool_calls: [],
+      recipes: [],
     };
 
     vi.mocked(apiClient.post).mockResolvedValue({ data: mockChatResponse });

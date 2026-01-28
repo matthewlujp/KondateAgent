@@ -312,3 +312,83 @@ async def test_chat_empty_message(auth_headers):
         )
 
     assert response.status_code == 422  # Validation error
+
+
+@pytest.mark.asyncio
+async def test_chat_response_includes_recipe_data(sample_session, sample_recipes, auth_headers):
+    """Test that chat response includes full recipe data for swapped meals.
+
+    This ensures the frontend can display swapped recipes even if they
+    weren't in the original sessionStorage recipe list.
+    """
+    # Add a third recipe that will be swapped in
+    now = datetime.now(UTC)
+    new_recipe = Recipe(
+        id="recipe_3",
+        source="youtube",
+        source_id="vid3",
+        url="https://youtube.com/watch?v=vid3",
+        thumbnail_url="https://example.com/thumb3.jpg",
+        title="Japanese Ramen",
+        creator_name="Chef C",
+        creator_id="chef_c",
+        extracted_ingredients=["ramen", "pork", "egg"],
+        raw_description="Authentic ramen",
+        posted_at=now,
+        cache_expires_at=now + timedelta(days=30),
+    )
+    recipe_cache._recipes[new_recipe.id] = new_recipe
+
+    plan = MealPlan(
+        user_id=TEST_USER,
+        ingredient_session_id=sample_session.id,
+        status="active",
+        slots=[
+            MealSlot(day="monday", recipe_id="recipe_1", enabled=True),
+            MealSlot(day="wednesday", recipe_id="recipe_2", enabled=True),
+        ],
+    )
+    meal_plan_store.save_plan(plan)
+
+    # Mock refinement agent to simulate a swap to recipe_3
+    async def mock_process_message(message, plan, recipe_pool, chat_history):
+        # Simulate swapping Monday to recipe_3
+        for slot in plan.slots:
+            if slot.day == "monday":
+                slot.recipe_id = "recipe_3"
+                slot.swap_count += 1
+                break
+        tool_call = {
+            "id": "call_swap_monday",
+            "type": "function",
+            "function": {
+                "name": "swap_meal",
+                "arguments": '{"day": "monday", "old_recipe": "recipe_1", "new_recipe": "recipe_3"}',
+            },
+        }
+        return "I've swapped Monday to Japanese Ramen.", [tool_call]
+
+    with patch(
+        "app.routers.meal_plans.refinement_agent.process_message",
+        new_callable=AsyncMock,
+        side_effect=mock_process_message,
+    ):
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            response = await client.post(
+                f"/api/meal-plans/{plan.id}/chat",
+                json={"message": "Swap Monday to something Japanese"},
+                headers=auth_headers,
+            )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    # The response should include recipe data
+    assert "recipes" in data, "Response should include 'recipes' field with full recipe data"
+
+    # Should have recipe data for all assigned slots
+    recipes_by_id = {r["id"]: r for r in data["recipes"]}
+    assert "recipe_3" in recipes_by_id, "Swapped recipe (recipe_3) should be in recipes"
+    assert recipes_by_id["recipe_3"]["title"] == "Japanese Ramen"
