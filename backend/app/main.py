@@ -2,7 +2,13 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import auth_router, ingredients_router, recipes_router, creators_router
+from app.routers import (
+    auth_router,
+    ingredients_router,
+    recipes_router,
+    creators_router,
+    meal_plans_router,
+)
 from app.config import settings
 
 # Configure logging
@@ -26,6 +32,7 @@ app.include_router(auth_router)
 app.include_router(ingredients_router)
 app.include_router(recipes_router)
 app.include_router(creators_router)
+app.include_router(meal_plans_router)
 
 
 @app.get("/health")
