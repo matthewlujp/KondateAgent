@@ -15,3 +15,4 @@ export { ChannelManagementSection } from './ChannelManagementSection';
 export { PlaceholderSection } from './PlaceholderSection';
 export { ChannelBanner } from './ChannelBanner';
 export { MealSlotCard } from './MealSlotCard';
+export { ChatPanel } from './ChatPanel';
