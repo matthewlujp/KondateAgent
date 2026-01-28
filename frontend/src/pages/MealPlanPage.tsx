@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { MealSlotCard, ChatPanel } from '../components';
 import { mealPlansApi } from '../api';
-import type { MealPlan, ChatMessage, DayOfWeek, ALL_DAYS, ScoredRecipe } from '../types';
+import type { MealPlan, ChatMessage, DayOfWeek, ScoredRecipe } from '../types';
 
 const ALL_DAYS_LIST: DayOfWeek[] = [
   'monday',
