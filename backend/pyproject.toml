@@ -17,6 +17,10 @@ dependencies = [
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+filterwarnings = [
+    # Ignore deprecation warnings from python-jose library (third-party issue)
+    "ignore:datetime.datetime.utcnow\\(\\) is deprecated:DeprecationWarning:jose.jwt",
+]
 
 [dependency-groups]
 dev = [

@@ -20,6 +20,13 @@ KondateAgent is a meal planning application that helps users create weekly meal 
 - **AI**: ChatGPT API (OpenAI)
 - **Target Platform**: Mobile-first web application
 
+### Python Package Management
+**IMPORTANT**: This project uses `uv` for Python package management. Always use `uv` commands:
+- `uv add <package>` - Add a new dependency
+- `uv sync` - Sync dependencies from lockfile
+- `uv run <command>` - Run commands in the uv environment (e.g., `uv run pytest`)
+- DO NOT use `pip install` or manual venv activation
+
 ## Project Architecture
 
 ### Backend (Python)
@@ -60,21 +67,20 @@ Design principles:
 
 ### Backend Setup
 ```bash
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
+# Sync dependencies (uv automatically manages the virtual environment)
+uv sync
 
 # Run backend server
-python -m uvicorn app.main:app --reload
+uv run uvicorn app.main:app --reload
 
 # Run tests
-pytest
+uv run pytest
 
 # Run specific test
-pytest tests/test_recipe_search.py::test_youtube_integration
+uv run pytest tests/test_recipe_search.py::test_youtube_integration
+
+# Add a new dependency
+uv add <package-name>
 ```
 
 ### Frontend Setup
