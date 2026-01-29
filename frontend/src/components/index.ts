@@ -16,3 +16,4 @@ export { PlaceholderSection } from './PlaceholderSection';
 export { ChannelBanner } from './ChannelBanner';
 export { MealSlotCard } from './MealSlotCard';
 export { ChatPanel } from './ChatPanel';
+export { CollapsibleSection } from './CollapsibleSection';
