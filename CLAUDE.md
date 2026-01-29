@@ -73,11 +73,11 @@ uv sync
 # Run backend server
 uv run uvicorn app.main:app --reload
 
-# Run tests
-uv run pytest
+# Run tests (with parallel execution)
+uv run pytest -n auto
 
 # Run specific test
-uv run pytest tests/test_recipe_search.py::test_youtube_integration
+uv run pytest -n auto tests/test_recipe_search.py::test_youtube_integration
 
 # Add a new dependency
 uv add <package-name>
