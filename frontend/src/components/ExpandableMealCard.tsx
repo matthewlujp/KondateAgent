@@ -91,9 +91,27 @@ export function ExpandableMealCard({ slot, recipe }: ExpandableMealCardProps) {
   // State 3: With recipe (expandable)
   return (
     <div className="bg-white border border-sand-200 rounded-lg shadow-warm overflow-hidden">
-      {/* Day label */}
-      <div className="px-4 pt-3 pb-2 bg-terra-50 border-b border-terra-100">
+      {/* Day label with swap badge */}
+      <div className="px-4 pt-3 pb-2 bg-terra-50 border-b border-terra-100 flex items-center justify-between">
         <div className="text-sm font-semibold text-terra-700">{dayLabel}</div>
+        {slot.swap_count > 0 && (
+          <div className="flex items-center text-xs text-terra-600 bg-terra-100 px-2 py-0.5 rounded-full">
+            <svg
+              className="w-3 h-3 mr-1"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+              />
+            </svg>
+            Swapped {slot.swap_count}×
+          </div>
+        )}
       </div>
 
       {/* Collapsed header - always visible */}

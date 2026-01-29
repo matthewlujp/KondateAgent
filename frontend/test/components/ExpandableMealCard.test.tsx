@@ -104,4 +104,19 @@ describe('ExpandableMealCard', () => {
     // Should not show duration when not available
     expect(screen.queryByText(/min/)).not.toBeInTheDocument();
   });
+
+  it('displays swap count badge when swap_count > 0', () => {
+    const slotWithSwaps = { ...mockSlot, swap_count: 3 };
+    render(<ExpandableMealCard slot={slotWithSwaps} recipe={mockRecipe} />);
+
+    // Should show swap count badge
+    expect(screen.getByText(/Swapped 3×/)).toBeInTheDocument();
+  });
+
+  it('does not display swap count badge when swap_count is 0', () => {
+    render(<ExpandableMealCard slot={mockSlot} recipe={mockRecipe} />);
+
+    // Should not show swap count badge
+    expect(screen.queryByText(/Swapped/)).not.toBeInTheDocument();
+  });
 });
