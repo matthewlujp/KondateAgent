@@ -1,4 +1,5 @@
-import { useState, ReactNode, useId } from 'react';
+import { useState, useId } from 'react';
+import type { ReactNode } from 'react';
 
 interface CollapsibleSectionProps {
   title: string;
