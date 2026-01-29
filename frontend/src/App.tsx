@@ -1,6 +1,6 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { IngredientCollectionPage, SettingsPage, MealPlanPage } from './pages';
+import { MealPlanningPage, SettingsPage } from './pages';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,9 +17,10 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<IngredientCollectionPage />} />
+          <Route path="/" element={<MealPlanningPage />} />
           <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/meal-plan" element={<MealPlanPage />} />
+          {/* Redirect old routes to new unified page */}
+          <Route path="/meal-plan" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>
