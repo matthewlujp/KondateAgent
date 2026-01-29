@@ -11,6 +11,34 @@ A meal planning application that helps users create weekly meal plans based on i
 - Shopping list generation with checkbox support
 - Mobile-first browser interface
 
+## User Flow
+
+The app uses a single-page workflow for meal planning:
+
+1. **Ingredients Section**
+   - Voice or text input to add ingredients
+   - Edit or remove ingredients
+   - "Re-search Recipes" button triggers recipe search
+
+2. **Recipes Section** (appears after search)
+   - Displays 10-15 scored recipes
+   - Shows coverage score and missing ingredients
+   - "Search Again" button to refresh
+
+3. **Meal Plan Section** (appears after recipe search)
+   - Select days to plan meals for
+   - "Generate Plan" creates optimized weekly plan
+   - Expandable meal cards show cooking time, ingredients, instructions
+   - "Regenerate Plan" creates new plan from current recipes
+
+4. **Chat Refinement** (after plan is generated)
+   - Floating action button (FAB) opens chat interface
+   - Mobile: Bottom sheet popup
+   - Desktop: Collapsible sidebar
+   - Natural language meal swaps: "Change Tuesday to something lighter"
+
+Each section is collapsible and has independent refresh functionality.
+
 ## Technology Stack
 
 - **Backend**: Python + FastAPI
