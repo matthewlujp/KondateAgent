@@ -18,3 +18,4 @@ export { MealSlotCard } from './MealSlotCard';
 export { ChatPanel } from './ChatPanel';
 export { CollapsibleSection } from './CollapsibleSection';
 export { ExpandableMealCard } from './ExpandableMealCard';
+export { ChatFAB } from './ChatFAB';
