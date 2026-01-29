@@ -18,7 +18,7 @@ interface ChatBottomSheetProps {
  * Features:
  * - Backdrop with tap-to-close
  * - Slides up from bottom with animation
- * - Max height 70vh to avoid keyboard issues
+ * - Height 50vh (half screen) for better visibility
  * - Auto-scrolls to bottom on new messages
  * - Auto-focus input on open
  * - Loading indicator with animated dots
@@ -85,7 +85,7 @@ export function ChatBottomSheet({
       {/* Bottom Sheet */}
       <div
         data-testid="chat-bottom-sheet"
-        className="fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-2xl shadow-2xl max-h-[70vh] flex flex-col animate-in slide-in-from-bottom duration-300"
+        className="fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-2xl shadow-2xl h-[50vh] flex flex-col animate-in slide-in-from-bottom duration-300"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-sand-200 bg-terra-50 rounded-t-2xl flex-shrink-0">
