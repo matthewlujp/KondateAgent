@@ -199,11 +199,11 @@ This project follows **Layered Specification-Driven Development**.
 
 ### Layer Hierarchy (CRITICAL - READ FIRST)
 ````
-L0: foundation/PRINCIPLES.md   → WHY we build
-L1: foundation/ARCHITECTURE.md → HOW we build (system-wide)
-L2: foundation/DOMAIN.md       → WHAT we build (conceptual)
-L3: features/*/SPEC.md         → WHICH features
-L4: features/*/PLAN.md        → Implementation steps
+L0: specs/PRINCIPLES.md   → WHY we build
+L1: specs/ARCHITECTURE.md → HOW we build (system-wide)
+L2: specs/DOMAIN.md       → WHAT we build (conceptual)
+L3: specs/features/*/SPEC.md   → WHICH features
+L4: Docs/plans/*.md            → Implementation details
 ````
 
 **Inheritance Rule**: Lower layers MUST reference and comply with upper layers.
@@ -216,35 +216,35 @@ L4: features/*/PLAN.md        → Implementation steps
 
 1. **Check Foundation Compliance**
 ````bash
-   # Always verify against foundation layers first
-   - Read foundation/ARCHITECTURE.md
-   - Read foundation/DOMAIN.md
+   # Always verify against specs layers first
+   - Read specs/ARCHITECTURE.md
+   - Read specs/DOMAIN.md
    - Verify no conflicts
 ````
 
 2. **Update Sequence (STRICT ORDER)**
 ````
-   ❌ WRONG: features/payment/SPEC.md → code
-   ✅ RIGHT: foundation/* → features/*/SPEC.md → code
+   ❌ WRONG: specs/features/payment/SPEC.md → code (skipping foundation check)
+   ✅ RIGHT: specs/* → specs/features/*/SPEC.md → code
 ````
 
 ### When Creating New Features
 ````markdown
 ## Step 1: Foundation Check (MANDATORY)
-- [ ] Read foundation/ARCHITECTURE.md
-- [ ] Read foundation/DOMAIN.md
+- [ ] Read specs/ARCHITECTURE.md
+- [ ] Read specs/DOMAIN.md
 - [ ] Identify inherited constraints
 - [ ] List in SPEC.md under "## Inherited Constraints"
 
 ## Step 2: Create Feature SPEC
-Location: features/<feature-name>/SPEC.md
+Location: specs/features/<feature-name>/SPEC.md
 
 Template:
 ```yaml
 ---
 inherits_from:
-  - ../../foundation/ARCHITECTURE.md#<section>
-  - ../../foundation/DOMAIN.md#<entity>
+  - ../../specs/ARCHITECTURE.md#<section>
+  - ../../specs/DOMAIN.md#<entity>
 validation_mode: strict
 ---
 
@@ -268,12 +268,12 @@ Before implementation:
 
 ## Architecture Change Protocol
 
-### Changing foundation/ARCHITECTURE.md
+### Changing specs/ARCHITECTURE.md
 
 ⚠️ **HIGH IMPACT - Special Process Required**
 ````markdown
 1. Create RFC document:
-   foundation/rfcs/YYYYMMDD-<change>.md
+   specs/rfcs/YYYYMMDD-<change>.md
 
 2. Impact Analysis:
    - List all affected features
@@ -286,18 +286,18 @@ Before implementation:
    - Security (if auth/data): [ ]
 
 4. Migration Plan:
-   - Update foundation/ARCHITECTURE.md
-   - Update all features/*/SPEC.md
-   - Update all features/*/PLAN.md
+   - Update specs/ARCHITECTURE.md
+   - Update all specs/features/*/SPEC.md
+   - Update all Docs/plans/*.md
    - Run full test suite
 ````
 
-### Changing foundation/DOMAIN.md
+### Changing specs/DOMAIN.md
 
 ⚠️ **MEDIUM IMPACT**
 ````markdown
 1. Check feature dependencies:
-   grep -r "foundation/DOMAIN.md" features/
+   grep -r "specs/DOMAIN.md" specs/features/
 
 2. Update all dependent features
 
@@ -357,9 +357,9 @@ async function createPayment(userId: string, amount: number) {
 
 ### Pattern 1: Adding a new feature
 ````bash
-1. Read foundation/ARCHITECTURE.md
-2. Read foundation/DOMAIN.md
-3. Create features/new-feature/SPEC.md
+1. Read specs/ARCHITECTURE.md
+2. Read specs/DOMAIN.md
+3. Create specs/features/new-feature/SPEC.md
 4. Reference foundation constraints explicitly
 5. Add only feature-specific details
 6. Generate PLAN.md from SPEC.md
@@ -367,11 +367,11 @@ async function createPayment(userId: string, amount: number) {
 
 ### Pattern 2: Modifying architecture
 ````bash
-1. Create foundation/rfcs/change-proposal.md
+1. Create specs/rfcs/change-proposal.md
 2. Run impact analysis across all features
 3. Get approvals
-4. Update foundation/ARCHITECTURE.md
-5. Update ALL affected features/*/SPEC.md
+4. Update specs/ARCHITECTURE.md
+5. Update ALL affected specs/features/*/SPEC.md
 6. Verify with /validate-layer-consistency
 ````
 
@@ -400,7 +400,7 @@ async function createPayment(userId: string, amount: number) {
 
 ✅ **Good State**:
 - All features reference foundation
-- foundation/ changes tracked in git history
+- specs/ changes tracked in git history
 - Impact analysis before architectural changes
 - No redundant constraint definitions
 
@@ -417,24 +417,24 @@ async function createPayment(userId: string, amount: number) {
 ### Scenario: Add "Payment Processing" feature
 ````markdown
 1. Foundation Check:
-   Read: foundation/ARCHITECTURE.md
+   Read: specs/ARCHITECTURE.md
    - Database: PostgreSQL ✓
    - Auth: Auth0 ✓
    - API: RESTful ✓
    
-   Read: foundation/DOMAIN.md
+   Read: specs/DOMAIN.md
    - User entity exists ✓
    - Payment entity defined ✓
 
 2. Create Spec:
-   File: features/payment-processing/SPEC.md
+   File: specs/features/payment-processing/SPEC.md
 ```yaml
    ---
    inherits_from:
-     - ../../foundation/ARCHITECTURE.md#database-strategy
-     - ../../foundation/ARCHITECTURE.md#api-design
-     - ../../foundation/DOMAIN.md#payment
-     - ../../foundation/DOMAIN.md#user
+     - ../../specs/ARCHITECTURE.md#database-strategy
+     - ../../specs/ARCHITECTURE.md#api-design
+     - ../../specs/DOMAIN.md#payment
+     - ../../specs/DOMAIN.md#user
    ---
    
    # Payment Processing
@@ -477,7 +477,7 @@ async function createPayment(userId: string, amount: number) {
 
 ### "Architecture change broke multiple features"
 ````bash
-1. Run: /impact-analysis foundation/ARCHITECTURE.md "<change>"
+1. Run: /impact-analysis specs/ARCHITECTURE.md "<change>"
 2. Review all affected features
 3. Create migration checklist
 4. Update features one by one
@@ -504,7 +504,7 @@ When in doubt, ask:
 
 | Task | Check | Update Order |
 |------|-------|--------------|
-| New feature | foundation/* | foundation → feature SPEC → code |
+| New feature | specs/* | foundation → feature SPEC → code |
 | Change arch | Impact analysis | RFC → foundation → all features → code |
 | Refactor domain | Feature dependencies | DOMAIN.md → feature SPECs → code |
 | Bug fix | Feature SPEC only | feature SPEC → code |
