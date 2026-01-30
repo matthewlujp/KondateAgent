@@ -21,7 +21,7 @@ app = FastAPI(title="KondateAgent API", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Vite dev server
+    allow_origin_regex=r"http://localhost:\d+",  # Allow any localhost port for dev
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -65,6 +65,7 @@ export function MealPlanningPage() {
   const [isTextInputExpanded, setIsTextInputExpanded] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthReady, setIsAuthReady] = useState(false);
 
   // Recipe search state
   const [isSearching, setIsSearching] = useState(false);
@@ -94,7 +95,7 @@ export function MealPlanningPage() {
   const { data: creators = [] } = useQuery({
     queryKey: ['creators'],
     queryFn: creatorsApi.getCreators,
-    enabled: !bannerDismissed,
+    enabled: !bannerDismissed && isAuthReady,
   });
 
   const showBanner = !bannerDismissed && creators.length === 0;
@@ -121,6 +122,7 @@ export function MealPlanningPage() {
   const initializeAuth = async (retryCount = 0) => {
     try {
       await ensureValidToken();
+      setIsAuthReady(true);
       await checkExistingSession();
     } catch (err: any) {
       console.error('Failed to initialize auth:', err);
@@ -128,10 +130,12 @@ export function MealPlanningPage() {
       if (err.response?.status === 401 && retryCount === 0) {
         console.log('Token invalid, getting fresh token and retrying...');
         tokenManager.clearToken();
+        setIsAuthReady(false);
         return initializeAuth(1);
       }
 
       setError('Failed to authenticate. Please refresh and try again.');
+      setIsAuthReady(false);
     }
   };
 
