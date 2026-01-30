@@ -5,3 +5,4 @@
 
 export { IngredientCollectionPage } from './IngredientCollectionPage';
 export { SettingsPage } from './SettingsPage';
+export { MealPlanningPage } from './MealPlanningPage';

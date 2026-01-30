@@ -11,6 +11,34 @@ A meal planning application that helps users create weekly meal plans based on i
 - Shopping list generation with checkbox support
 - Mobile-first browser interface
 
+## User Flow
+
+The app uses a single-page workflow for meal planning:
+
+1. **Ingredients Section**
+   - Voice or text input to add ingredients
+   - Edit or remove ingredients
+   - "Re-search Recipes" button triggers recipe search
+
+2. **Recipes Section** (appears after search)
+   - Displays 10-15 scored recipes
+   - Shows coverage score and missing ingredients
+   - "Search Again" button to refresh
+
+3. **Meal Plan Section** (appears after recipe search)
+   - Select days to plan meals for
+   - "Generate Plan" creates optimized weekly plan
+   - Expandable meal cards show cooking time, ingredients, instructions
+   - "Regenerate Plan" creates new plan from current recipes
+
+4. **Chat Refinement** (after plan is generated)
+   - Floating action button (FAB) opens chat interface
+   - Mobile: Bottom sheet popup
+   - Desktop: Collapsible sidebar
+   - Natural language meal swaps: "Change Tuesday to something lighter"
+
+Each section is collapsible and has independent refresh functionality.
+
 ## Technology Stack
 
 - **Backend**: Python + FastAPI
@@ -36,7 +64,8 @@ A meal planning application that helps users create weekly meal plans based on i
 
 ## Prerequisites
 
-- Python 3.8 or higher
+- Python 3.11 or higher
+- [uv](https://github.com/astral-sh/uv) (Python package manager)
 - Node.js 18 or higher
 - npm or yarn
 
@@ -49,26 +78,20 @@ A meal planning application that helps users create weekly meal plans based on i
 cd backend
 ```
 
-2. Create and activate virtual environment:
+2. Install dependencies (uv automatically manages the virtual environment):
 ```bash
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+uv sync
 ```
 
-3. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-4. Configure environment variables:
+3. Configure environment variables:
 ```bash
 cp .env.example .env
 # Edit .env and add your API keys (OpenAI, YouTube, Instagram)
 ```
 
-5. Start the backend server:
+4. Start the backend server:
 ```bash
-uvicorn app.main:app --reload
+uv run uvicorn app.main:app --reload
 ```
 
 The backend API will be available at `http://localhost:8000`
@@ -100,16 +123,22 @@ The frontend will be available at `http://localhost:5173` (default Vite port)
 
 ```bash
 # Run tests
-pytest
+uv run pytest
 
 # Run tests with coverage
-pytest --cov=app
+uv run pytest --cov=app
 
 # Run specific test file
-pytest tests/test_ingredients.py
+uv run pytest tests/test_ingredients.py
 
 # Start dev server with auto-reload
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+# Add a new dependency
+uv add <package-name>
+
+# Add a dev dependency
+uv add --dev <package-name>
 ```
 
 ### Frontend
@@ -159,7 +188,7 @@ For full API documentation, visit `http://localhost:8000/docs` when the backend 
 
 ```bash
 cd backend
-pytest
+uv run pytest
 ```
 
 ### Frontend Tests
