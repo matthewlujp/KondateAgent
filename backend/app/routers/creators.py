@@ -1,10 +1,12 @@
 from typing import Literal
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
+import httpx
 
 from app.auth import CurrentUser
 from app.models.recipe import PreferredCreator
 from app.services.creator_store import creator_store
+from app.config import settings
 
 router = APIRouter(prefix="/api/creators", tags=["creators"])
 
@@ -48,7 +50,7 @@ async def create_creator(request: CreateCreatorRequest, current_user: CurrentUse
     # Extract creator ID and name from URL
     try:
         if source == "youtube":
-            creator_id, creator_name = _parse_youtube_url(url)
+            creator_id, creator_name = await _parse_youtube_url(url)
         else:  # instagram
             creator_id, creator_name = _parse_instagram_url(url)
     except ValueError as e:
@@ -93,44 +95,107 @@ async def delete_creator(creator_id: str, current_user: CurrentUser):
 
 
 # Helper functions for URL parsing
-def _parse_youtube_url(url: str) -> tuple[str, str]:
+async def _parse_youtube_url(url: str) -> tuple[str, str]:
     """
-    Extract channel ID and name from YouTube URL.
+    Extract channel ID and name from YouTube URL by calling YouTube API.
 
     Supports formats:
-    - https://www.youtube.com/@channelname
-    - https://www.youtube.com/c/channelname
-    - https://www.youtube.com/channel/UCxxxxx
+    - https://www.youtube.com/@channelname (handle format)
+    - https://www.youtube.com/c/channelname (custom URL format)
+    - https://www.youtube.com/channel/UCxxxxx (direct channel ID)
 
     Returns:
         Tuple of (channel_id, channel_name)
+
+    Raises:
+        ValueError: If URL format is invalid or API call fails
     """
     url = url.rstrip("/")
 
-    # Extract from URL patterns
-    if "/@" in url:
-        # Handle format: youtube.com/@channelname
-        handle = url.split("/@")[-1]
-        # In production, would call YouTube API to get channel ID from handle
-        # For now, use handle as both ID and name
-        return handle, handle
+    if not settings.youtube_api_key:
+        raise ValueError("YouTube API key not configured")
 
-    elif "/c/" in url:
-        # Handle format: youtube.com/c/channelname
-        channel_name = url.split("/c/")[-1]
-        # In production, would call YouTube API to resolve to channel ID
-        return channel_name, channel_name
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        # Extract from URL patterns
+        if "/@" in url:
+            # Handle format: youtube.com/@channelname
+            handle = url.split("/@")[-1]
+            # Call YouTube API to get channel ID from handle
+            params = {
+                "part": "id,snippet",
+                "forHandle": handle,
+                "key": settings.youtube_api_key,
+            }
+            response = await client.get(
+                "https://www.googleapis.com/youtube/v3/channels",
+                params=params,
+            )
+            response.raise_for_status()
+            data = response.json()
 
-    elif "/channel/" in url:
-        # Handle format: youtube.com/channel/UCxxxxx
-        channel_id = url.split("/channel/")[-1]
-        # In production, would call YouTube API to get channel name
-        return channel_id, f"Channel {channel_id[:8]}"
+            if not data.get("items"):
+                raise ValueError(f"YouTube channel not found for handle: @{handle}")
 
-    else:
-        raise ValueError(
-            "Invalid YouTube URL. Use format: youtube.com/@channelname"
-        )
+            channel_id = data["items"][0]["id"]
+            channel_name = data["items"][0]["snippet"]["title"]
+            return channel_id, channel_name
+
+        elif "/c/" in url:
+            # Handle format: youtube.com/c/channelname (legacy custom URL)
+            # These are typically redirected to handles, but we try username lookup
+            username = url.split("/c/")[-1]
+            params = {
+                "part": "id,snippet",
+                "forUsername": username,
+                "key": settings.youtube_api_key,
+            }
+            response = await client.get(
+                "https://www.googleapis.com/youtube/v3/channels",
+                params=params,
+            )
+            response.raise_for_status()
+            data = response.json()
+
+            if not data.get("items"):
+                raise ValueError(
+                    f"YouTube channel not found for username: {username}. "
+                    "Try using the @handle format instead (e.g., youtube.com/@channelname)"
+                )
+
+            channel_id = data["items"][0]["id"]
+            channel_name = data["items"][0]["snippet"]["title"]
+            return channel_id, channel_name
+
+        elif "/channel/" in url:
+            # Handle format: youtube.com/channel/UCxxxxx (direct channel ID)
+            channel_id = url.split("/channel/")[-1]
+
+            # Fetch channel name from API
+            params = {
+                "part": "snippet",
+                "id": channel_id,
+                "key": settings.youtube_api_key,
+            }
+            response = await client.get(
+                "https://www.googleapis.com/youtube/v3/channels",
+                params=params,
+            )
+            response.raise_for_status()
+            data = response.json()
+
+            if not data.get("items"):
+                raise ValueError(f"YouTube channel not found for ID: {channel_id}")
+
+            channel_name = data["items"][0]["snippet"]["title"]
+            return channel_id, channel_name
+
+        else:
+            raise ValueError(
+                "Invalid YouTube URL format. Supported formats:\n"
+                "- youtube.com/@channelname\n"
+                "- youtube.com/c/channelname\n"
+                "- youtube.com/channel/UCxxxxx"
+            )
 
 
 def _parse_instagram_url(url: str) -> tuple[str, str]:
