@@ -95,7 +95,27 @@ class TestRecipeCollectionE2E:
 
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             # Step 1: Add preferred creator
-            with patch("app.routers.creators.creator_store") as mock_creator_store:
+            # Mock YouTube API response for channel ID lookup
+            mock_yt_response = AsyncMock()
+            mock_yt_response.status_code = 200
+            mock_yt_response.json = lambda: {
+                "items": [
+                    {
+                        "id": "UCpreferred",
+                        "snippet": {"title": "Favorite Chef"},
+                    }
+                ]
+            }
+            mock_yt_response.raise_for_status = lambda: None
+
+            # Create a mock httpx client
+            mock_httpx_client = AsyncMock()
+            mock_httpx_client.get.return_value = mock_yt_response
+            mock_httpx_client.__aenter__.return_value = mock_httpx_client
+            mock_httpx_client.__aexit__.return_value = None
+
+            with patch("app.routers.creators.creator_store") as mock_creator_store, \
+                 patch("httpx.AsyncClient", return_value=mock_httpx_client):
                 mock_creator_store.create.return_value = preferred_creator
 
                 response = await client.post(
