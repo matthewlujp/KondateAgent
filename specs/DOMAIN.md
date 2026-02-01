@@ -254,6 +254,46 @@ A chat session for refining a meal plan.
 
 ---
 
+### LanguageSettings
+
+User preferences for application language and recipe search languages.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| system_language | enum | `en` / `ja` - UI display language |
+| recipe_search_languages | enum[] | `en` / `ja` - Languages for recipe search |
+
+**SystemLanguage Enum:**
+```
+en | ja
+```
+
+**RecipeLanguage Enum:**
+```
+en | ja
+```
+
+**Business Rules:**
+- `system_language` controls the application UI language
+- `recipe_search_languages` filters which language recipes to search
+- At least one recipe language must be selected
+- Changing system language automatically adds it to recipe search languages
+- Currently stored globally; will be user-scoped with authentication
+
+**Default Values:**
+- `system_language`: `en`
+- `recipe_search_languages`: `["en"]`
+
+**Example:**
+```json
+{
+  "systemLanguage": "ja",
+  "recipeSearchLanguages": ["en", "ja"]
+}
+```
+
+---
+
 ## Value Objects
 
 These are not persisted entities but important domain concepts:
@@ -285,6 +325,7 @@ These are not persisted entities but important domain concepts:
 | User | IngredientSession | 1:many (one active) |
 | User | PreferredCreator | 1:many |
 | User | MealPlan | 1:many (one active) |
+| User | LanguageSettings | 1:1 |
 | IngredientSession | Ingredient | 1:many |
 | IngredientSession | MealPlan | 1:1 |
 | PreferredCreator | Recipe | 1:many (fetched) |
@@ -308,6 +349,8 @@ Rules that must always be true:
 4. **Recipes reference valid creators**: `Recipe.creator_id` matches a `PreferredCreator` the user has added
 
 5. **Plan ties to session**: `MealPlan.ingredient_session_id` must reference a valid `IngredientSession`
+
+6. **Recipe languages not empty**: `LanguageSettings.recipe_search_languages` must have at least one language
 
 ---
 
