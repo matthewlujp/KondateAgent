@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   SessionStartModal,
@@ -73,6 +73,9 @@ export function IngredientCollectionPage() {
   // For demo purposes, use a hardcoded user ID
   // In production, this would come from auth context
   const USER_ID = 'demo-user';
+
+  // Navigation
+  const navigate = useNavigate();
 
   /**
    * Initialize auth token and check for existing session on mount
@@ -296,7 +299,14 @@ export function IngredientCollectionPage() {
           setSearchComplete(true);
           setIsSearching(false);
           console.log('Recipe search complete:', recipes);
-          // TODO: Navigate to meal planning page with results
+
+          // Store recipes in sessionStorage for meal plan page
+          sessionStorage.setItem('mealplan_recipes', JSON.stringify(recipes));
+
+          // Navigate to meal plan page after brief delay to show completion
+          setTimeout(() => {
+            navigate(`/meal-plan?session_id=${session.id}`);
+          }, 1500);
         },
         onError: (errorMessage) => {
           setSearchError(errorMessage);

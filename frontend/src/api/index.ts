@@ -4,3 +4,4 @@ export { ingredientsApi } from './ingredients';
 export { searchRecipes, streamRecipeSearch } from './recipes';
 export type { StreamRecipeSearchOptions } from './recipes';
 export { creatorsApi } from './creators';
+export { mealPlansApi } from './mealPlans';
