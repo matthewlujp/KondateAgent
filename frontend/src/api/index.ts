@@ -5,3 +5,4 @@ export { searchRecipes, streamRecipeSearch } from './recipes';
 export type { StreamRecipeSearchOptions } from './recipes';
 export { creatorsApi } from './creators';
 export { mealPlansApi } from './mealPlans';
+export { getLanguageSettings, updateLanguageSettings } from './settings';

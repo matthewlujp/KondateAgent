@@ -509,7 +509,7 @@ async def test_search_all_platforms_youtube_only(service, mock_youtube_results, 
         yt_results, ig_results = await service._search_all_platforms(queries, [], [])
 
         # YouTube should be called
-        service._search_youtube.assert_called_once_with(queries, [])
+        service._search_youtube.assert_called_once_with(queries, [], None)
         # Instagram should NOT be called
         service._search_instagram.assert_not_called()
 
@@ -553,7 +553,7 @@ async def test_search_all_platforms_both_enabled(service, mock_youtube_results, 
         yt_results, ig_results = await service._search_all_platforms(queries, [], [])
 
         # Both should be called
-        service._search_youtube.assert_called_once_with(queries, [])
+        service._search_youtube.assert_called_once_with(queries, [], None)
         service._search_instagram.assert_called_once_with(queries, [])
 
         assert yt_results == mock_youtube_results

@@ -1,0 +1,68 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "back": "Back",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "languageDescription": "Configure display and recipe languages",
+    "displayLanguage": "Display Language",
+    "recipeSearchLanguages": "Recipe Search Languages",
+    "recipeSearchHint": "Select which languages to search for recipes",
+    "channels": "Recipe Sources",
+    "channelsDescription": "Manage your YouTube channels"
+  },
+  "mealPlan": {
+    "pageTitle": "Plan Your Meals",
+    "pageSubtitle": "From ingredients to weekly plan",
+    "title": "Meal Planning",
+    "ingredients": "Ingredients",
+    "recipes": "Recipes",
+    "recipesFound": "Recipes Found",
+    "plan": "Plan",
+    "yourMealPlan": "Your Meal Plan",
+    "startPlanning": "Start Planning",
+    "loading": "Generating your meal plan...",
+    "noRecipes": "No recipes found",
+    "addIngredients": "Add Ingredients",
+    "searchRecipes": "Re-search Recipes",
+    "searchingRecipes": "Searching recipes...",
+    "searchAgain": "Search Again",
+    "whichDays": "Which days would you like to plan?",
+    "generatePlan": "Generate Plan",
+    "regeneratePlan": "Regenerate Plan",
+    "generatingPlan": "Generating plan...",
+    "match": "match",
+    "need": "Need"
+  },
+  "ingredients": {
+    "title": "Your Ingredients",
+    "add": "Add Ingredient",
+    "remove": "Remove",
+    "placeholder": "Enter ingredients...",
+    "voiceInput": "Use Voice Input",
+    "listening": "Listening...",
+    "tapToStart": "Tap to start",
+    "tellMeIngredients": "Tell me what's in your fridge",
+    "sayDoneWhenFinished": "Say \"done\" or \"that's it\" when finished",
+    "voiceNotSupported": "Voice input is not supported in this browser. Please use Chrome, Edge, or Safari, or use the text input below."
+  },
+  "languages": {
+    "en": "English",
+    "ja": "Japanese"
+  },
+  "days": {
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday",
+    "sunday": "Sunday"
+  }
+}

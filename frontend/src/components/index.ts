@@ -13,6 +13,7 @@ export { ChannelCard } from './ChannelCard';
 export { AddChannelInput } from './AddChannelInput';
 export { ChannelManagementSection } from './ChannelManagementSection';
 export { PlaceholderSection } from './PlaceholderSection';
+export { LanguageSettingsSection } from './LanguageSettingsSection';
 export { ChannelBanner } from './ChannelBanner';
 export { MealSlotCard } from './MealSlotCard';
 export { ChatPanel } from './ChatPanel';

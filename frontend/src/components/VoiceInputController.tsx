@@ -1,9 +1,24 @@
 import { useVoiceInput } from '../hooks/useVoiceInput';
+import { useLanguageSettings } from '../contexts';
+import { useTranslation } from 'react-i18next';
+import type { SystemLanguage } from '../types/language';
 
 interface VoiceInputControllerProps {
   onTranscript: (transcript: string) => void;
   onWakeWord: () => void;
 }
+
+// Map system language to speech recognition language codes
+const SPEECH_RECOGNITION_LANG_MAP: Record<SystemLanguage, string> = {
+  en: 'en-US',
+  ja: 'ja-JP',
+};
+
+// Wake words for ending voice input by language
+const WAKE_WORDS_MAP: Record<SystemLanguage, string[]> = {
+  en: ['done', "that's it", 'that is it', 'finished'],
+  ja: ['完了', '終わり', '以上', 'おわり', '終了'],
+};
 
 /**
  * VoiceInputController Component
@@ -19,17 +34,23 @@ interface VoiceInputControllerProps {
  * - Wake word detection for stopping
  */
 export function VoiceInputController({ onTranscript, onWakeWord }: VoiceInputControllerProps) {
+  const { t } = useTranslation();
+  const { systemLanguage } = useLanguageSettings();
+  const speechRecognitionLang = SPEECH_RECOGNITION_LANG_MAP[systemLanguage];
+  const wakeWords = WAKE_WORDS_MAP[systemLanguage];
+
   const { isListening, isSupported, error, startListening, stopListening } = useVoiceInput({
     onTranscript,
     onWakeWord,
+    language: speechRecognitionLang,
+    wakeWords,
   });
 
   if (!isSupported) {
     return (
       <div className="bg-saffron-50 border-2 border-saffron-300 rounded-lg p-4 text-center">
         <p className="text-sm text-saffron-800">
-          Voice input is not supported in this browser. Please use Chrome, Edge, or Safari, or use
-          the text input below.
+          {t('ingredients.voiceNotSupported')}
         </p>
       </div>
     );
@@ -102,16 +123,16 @@ export function VoiceInputController({ onTranscript, onWakeWord }: VoiceInputCon
       <div className="text-center">
         {isListening ? (
           <div>
-            <p className="text-lg font-medium text-sand-900">Listening...</p>
+            <p className="text-lg font-medium text-sand-900">{t('ingredients.listening')}</p>
             <p className="text-sm text-sand-600 mt-1">
-              Say "done" or "that's it" when finished
+              {t('ingredients.sayDoneWhenFinished')}
             </p>
           </div>
         ) : (
           <div>
-            <p className="text-lg font-medium text-sand-900">Tap to start</p>
+            <p className="text-lg font-medium text-sand-900">{t('ingredients.tapToStart')}</p>
             <p className="text-sm text-sand-600 mt-1">
-              Tell me what's in your fridge
+              {t('ingredients.tellMeIngredients')}
             </p>
           </div>
         )}

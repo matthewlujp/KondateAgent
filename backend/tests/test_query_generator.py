@@ -155,3 +155,88 @@ async def test_generate_with_many_ingredients(generator, mock_openai_response):
         # Should still generate queries
         assert len(result.direct_queries) > 0
         assert len(result.dish_suggestions) > 0
+
+
+@pytest.mark.asyncio
+async def test_generate_with_japanese_language(generator):
+    """Test generating queries in Japanese."""
+    # Mock Japanese response
+    mock_parsed = SearchQueries(
+        direct_queries=[
+            "鶏肉 トマト レシピ",
+            "鶏肉 パスタ レシピ",
+        ],
+        dish_suggestions=[
+            "チキンポモドーロ",
+            "照り焼きチキン",
+        ],
+    )
+
+    mock_message = AsyncMock()
+    mock_message.refusal = None
+    mock_message.parsed = mock_parsed
+
+    mock_choice = AsyncMock()
+    mock_choice.message = mock_message
+
+    mock_response = AsyncMock()
+    mock_response.choices = [mock_choice]
+
+    with patch("app.services.query_generator.openai_client") as mock_client:
+        mock_client.beta.chat.completions.parse = AsyncMock(return_value=mock_response)
+
+        result = await generator.generate(["chicken", "tomatoes"], languages=["ja"])
+
+        assert len(result.direct_queries) > 0
+        assert len(result.dish_suggestions) > 0
+        # Verify Japanese system prompt was used (checked via mock call args)
+        call_args = mock_client.beta.chat.completions.parse.call_args
+        assert "食材" in str(call_args)  # Japanese for "ingredients"
+
+
+@pytest.mark.asyncio
+async def test_generate_with_multiple_languages_uses_first(generator):
+    """Test that when multiple languages specified, first language is used."""
+    mock_parsed = SearchQueries(
+        direct_queries=["鶏肉 トマト レシピ"],
+        dish_suggestions=["チキンポモドーロ"],
+    )
+
+    mock_message = AsyncMock()
+    mock_message.refusal = None
+    mock_message.parsed = mock_parsed
+
+    mock_choice = AsyncMock()
+    mock_choice.message = mock_message
+
+    mock_response = AsyncMock()
+    mock_response.choices = [mock_choice]
+
+    with patch("app.services.query_generator.openai_client") as mock_client:
+        mock_client.beta.chat.completions.parse = AsyncMock(return_value=mock_response)
+
+        result = await generator.generate(["chicken"], languages=["ja", "en"])
+
+        # Should use Japanese (first language)
+        call_args = mock_client.beta.chat.completions.parse.call_args
+        assert "食材" in str(call_args)
+
+
+@pytest.mark.asyncio
+async def test_fallback_queries_with_japanese(generator):
+    """Test fallback query generation in Japanese."""
+    result = generator._fallback_queries(["chicken", "rice"], language="ja")
+
+    assert len(result.direct_queries) > 0
+    assert "chicken rice レシピ" in result.direct_queries
+    assert "chicken レシピ" in result.direct_queries
+
+
+@pytest.mark.asyncio
+async def test_fallback_queries_defaults_to_english(generator):
+    """Test fallback query generation defaults to English."""
+    result = generator._fallback_queries(["chicken", "rice"])
+
+    assert len(result.direct_queries) > 0
+    assert "chicken rice recipe" in result.direct_queries
+    assert "chicken recipe" in result.direct_queries

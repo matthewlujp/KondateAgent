@@ -23,6 +23,7 @@
 | Styling | Tailwind CSS | Utility-first, mobile-responsive |
 | State | TanStack Query | Server state management, caching |
 | Routing | React Router | Standard, simple |
+| i18n | react-i18next | Industry standard, React integration |
 
 ### External APIs
 | Service | Purpose |
@@ -45,12 +46,14 @@
 │   │   ├── models/           # Pydantic data models
 │   │   │   ├── ingredient.py
 │   │   │   ├── recipe.py
-│   │   │   └── meal_plan.py
+│   │   │   ├── meal_plan.py
+│   │   │   └── settings.py
 │   │   ├── routers/          # API endpoints by domain
 │   │   │   ├── ingredients.py
 │   │   │   ├── recipes.py
 │   │   │   ├── creators.py
-│   │   │   └── meal_plans.py
+│   │   │   ├── meal_plans.py
+│   │   │   └── settings.py
 │   │   └── services/         # Business logic
 │   │       ├── ingredient_parser.py
 │   │       ├── youtube_client.py
@@ -63,6 +66,10 @@
 │   │   ├── App.tsx           # Root, routing
 │   │   ├── api/              # API client functions
 │   │   ├── components/       # Reusable UI components
+│   │   ├── contexts/         # React context providers
+│   │   ├── i18n/             # Internationalization
+│   │   │   ├── index.ts      # i18n configuration
+│   │   │   └── locales/      # Translation files (en.json, ja.json)
 │   │   ├── pages/            # Route-level components
 │   │   ├── hooks/            # Custom React hooks
 │   │   └── types/            # TypeScript interfaces
@@ -110,6 +117,9 @@ http://localhost:8000/api
 | POST | `/meal-plans` | Generate new plan |
 | GET | `/meal-plans/{id}` | Get plan with recipes |
 | POST | `/meal-plans/{id}/chat` | Refinement chat message |
+| **Settings** |||
+| GET | `/settings/language` | Get language settings |
+| PUT | `/settings/language` | Update language settings |
 
 ### Response Format
 
@@ -204,6 +214,25 @@ const { data: plan, isLoading } = useQuery({
 - Components are self-contained with their own state
 - Shared state lifted to pages, passed via props
 
+#### Internationalization (i18n)
+All user-facing text uses translation keys via `react-i18next`:
+
+```typescript
+import { useTranslation } from 'react-i18next';
+
+function MyComponent() {
+  const { t } = useTranslation();
+  return <h1>{t('mealPlanning.title')}</h1>;
+}
+```
+
+Translation files in `src/i18n/locales/`:
+- `en.json` - English (default)
+- `ja.json` - Japanese
+
+Supported languages: English (`en`), Japanese (`ja`)
+
+
 ---
 
 ## Data Flow
@@ -243,6 +272,7 @@ const { data: plan, isLoading } = useQuery({
 | Recipes | Backend cache | 24 hours |
 | Meal Plan | Backend store | Until new plan |
 | Chat History | Backend session | Per refinement |
+| Language Settings | Backend + localStorage | Persistent |
 | UI State | React state | Per page visit |
 | API Cache | TanStack Query | 5 minutes |
 

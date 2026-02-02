@@ -56,6 +56,7 @@ class YouTubeClient:
         query: str,
         max_results: int = 10,
         channel_id: Optional[str] = None,
+        relevance_languages: Optional[list[str]] = None,
     ) -> list[YouTubeSearchResult]:
         """
         Search for videos on YouTube.
@@ -64,6 +65,8 @@ class YouTubeClient:
             query: Search query string
             max_results: Maximum number of results (1-50)
             channel_id: Optional channel ID to filter results
+            relevance_languages: Languages to filter results (e.g., ['en', 'ja'])
+                If multiple languages provided, searches in parallel and merges results
 
         Returns:
             List of YouTubeSearchResult objects
@@ -74,6 +77,13 @@ class YouTubeClient:
         if not self.api_key:
             raise YouTubeAPIError("YouTube API key not configured")
 
+        # If multiple languages specified, search in parallel and merge results
+        if relevance_languages and len(relevance_languages) > 1:
+            return await self._search_multi_language(
+                query, max_results, channel_id, relevance_languages
+            )
+
+        # Single language or no language filter
         params = {
             "key": self.api_key,
             "q": query,
@@ -85,6 +95,10 @@ class YouTubeClient:
 
         if channel_id:
             params["channelId"] = channel_id
+
+        # Add language filter if specified (single language)
+        if relevance_languages and len(relevance_languages) == 1:
+            params["relevanceLanguage"] = relevance_languages[0]
 
         try:
             response = await self.client.get(f"{self.BASE_URL}/search", params=params)
@@ -116,6 +130,137 @@ class YouTubeClient:
 
             # Parse published date
             published_at = datetime.fromisoformat(snippet["publishedAt"].replace("Z", "+00:00"))
+
+            # Get best thumbnail (prefer high quality)
+            thumbnails = snippet["thumbnails"]
+            thumbnail_url = (
+                thumbnails.get("high", {}).get("url")
+                or thumbnails.get("medium", {}).get("url")
+                or thumbnails.get("default", {}).get("url")
+                or ""
+            )
+
+            results.append(
+                YouTubeSearchResult(
+                    video_id=video_id,
+                    title=snippet["title"],
+                    thumbnail_url=thumbnail_url,
+                    channel_id=snippet["channelId"],
+                    channel_name=snippet["channelTitle"],
+                    description=snippet["description"],
+                    published_at=published_at,
+                    duration=durations.get(video_id),
+                )
+            )
+
+        return results
+
+    async def _search_multi_language(
+        self,
+        query: str,
+        max_results: int,
+        channel_id: Optional[str],
+        languages: list[str],
+    ) -> list[YouTubeSearchResult]:
+        """
+        Search for videos in multiple languages in parallel and merge results.
+
+        Args:
+            query: Search query string
+            max_results: Maximum total results
+            channel_id: Optional channel ID filter
+            languages: List of language codes (e.g., ['en', 'ja'])
+
+        Returns:
+            Deduplicated list of YouTubeSearchResult objects
+        """
+        import asyncio
+
+        # Calculate results per language (distribute evenly)
+        results_per_lang = max(1, max_results // len(languages))
+
+        # Create search tasks for each language
+        tasks = []
+        for lang in languages:
+            params = {
+                "key": self.api_key,
+                "q": query,
+                "part": "snippet",
+                "type": "video",
+                "maxResults": min(results_per_lang, 50),
+                "order": "relevance",
+                "relevanceLanguage": lang,
+            }
+            if channel_id:
+                params["channelId"] = channel_id
+
+            tasks.append(self._execute_search(params))
+
+        # Execute searches in parallel
+        results_lists = await asyncio.gather(*tasks, return_exceptions=True)
+
+        # Merge and deduplicate results
+        all_results = []
+        seen_video_ids = set()
+
+        for results in results_lists:
+            # Skip failed searches
+            if isinstance(results, Exception):
+                continue
+
+            for result in results:
+                if result.video_id not in seen_video_ids:
+                    seen_video_ids.add(result.video_id)
+                    all_results.append(result)
+
+        # Return up to max_results
+        return all_results[:max_results]
+
+    async def _execute_search(self, params: dict) -> list[YouTubeSearchResult]:
+        """
+        Execute a single YouTube search with given parameters.
+
+        Args:
+            params: API parameters dict
+
+        Returns:
+            List of YouTubeSearchResult objects
+        """
+        try:
+            response = await self.client.get(f"{self.BASE_URL}/search", params=params)
+            response.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 429:
+                raise YouTubeAPIError("Rate limit exceeded", 429)
+            elif e.response.status_code == 403:
+                raise YouTubeAPIError("API key invalid or quota exceeded", 403)
+            else:
+                raise YouTubeAPIError(
+                    f"HTTP {e.response.status_code}: {e.response.text}",
+                    e.response.status_code,
+                )
+        except httpx.RequestError as e:
+            raise YouTubeAPIError(f"Request failed: {str(e)}")
+
+        data = response.json()
+        items = data.get("items", [])
+
+        if not items:
+            return []
+
+        # Get video IDs for detailed info (including duration)
+        video_ids = [item["id"]["videoId"] for item in items]
+        durations = await self._get_video_durations(video_ids)
+
+        results = []
+        for item in items:
+            video_id = item["id"]["videoId"]
+            snippet = item["snippet"]
+
+            # Parse published date
+            published_at = datetime.fromisoformat(
+                snippet["publishedAt"].replace("Z", "+00:00")
+            )
 
             # Get best thumbnail (prefer high quality)
             thumbnails = snippet["thumbnails"]

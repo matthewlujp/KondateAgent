@@ -64,6 +64,7 @@ class RecipeCollectionService:
         user_id: str,
         ingredients: list[str],
         max_results: int = 15,
+        recipe_languages: Optional[list[str]] = None,
         on_progress: Optional[ProgressCallback] = None,
     ) -> list[ScoredRecipe]:
         """
@@ -73,6 +74,7 @@ class RecipeCollectionService:
             user_id: User identifier
             ingredients: List of ingredient names user has
             max_results: Maximum number of top recipes to return
+            recipe_languages: Languages to filter recipe search (e.g., ['en', 'ja'])
             on_progress: Optional callback for progress updates
 
         Returns:
@@ -92,7 +94,7 @@ class RecipeCollectionService:
                 )
             )
 
-        queries = await self.query_generator.generate(ingredients)
+        queries = await self.query_generator.generate(ingredients, languages=recipe_languages)
         all_queries = queries.direct_queries + queries.dish_suggestions
 
         if not all_queries:
@@ -121,7 +123,7 @@ class RecipeCollectionService:
             )
 
         youtube_results, instagram_results = await self._search_all_platforms(
-            all_queries, youtube_channels, instagram_accounts
+            all_queries, youtube_channels, instagram_accounts, recipe_languages
         )
 
         if not youtube_results and not instagram_results:
@@ -179,6 +181,7 @@ class RecipeCollectionService:
         queries: list[str],
         youtube_channels: list[str],
         instagram_accounts: list[str],
+        recipe_languages: Optional[list[str]] = None,
     ) -> tuple[list, list]:
         """Search enabled platforms in parallel."""
 
@@ -193,7 +196,7 @@ class RecipeCollectionService:
         task_sources = []  # Track which source each task belongs to
 
         if settings.enable_youtube_source:
-            tasks.append(self._search_youtube(queries, youtube_channels))
+            tasks.append(self._search_youtube(queries, youtube_channels, recipe_languages))
             task_sources.append("youtube")
 
         if settings.enable_instagram_source:
@@ -231,7 +234,7 @@ class RecipeCollectionService:
         return youtube_results, instagram_results
 
     async def _search_youtube(
-        self, queries: list[str], preferred_channels: list[str]
+        self, queries: list[str], preferred_channels: list[str], recipe_languages: Optional[list[str]] = None
     ) -> list:
         """Search YouTube with all queries."""
         all_results = []
@@ -243,7 +246,7 @@ class RecipeCollectionService:
                     for query in queries[:3]:  # Limit queries per channel
                         try:
                             results = await self.youtube_client.search_videos(
-                                query, max_results=5, channel_id=channel_id
+                                query, max_results=5, channel_id=channel_id, relevance_languages=recipe_languages
                             )
                             all_results.extend(results)
                         except YouTubeAPIError:
@@ -253,7 +256,7 @@ class RecipeCollectionService:
             for query in queries[:5]:  # Limit total queries
                 try:
                     results = await self.youtube_client.search_videos(
-                        query, max_results=8
+                        query, max_results=8, relevance_languages=recipe_languages
                     )
                     all_results.extend(results)
                 except YouTubeAPIError:

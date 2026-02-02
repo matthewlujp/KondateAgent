@@ -1,4 +1,5 @@
 import type { ProgressEvent, ScoredRecipe } from '../types';
+import type { RecipeLanguage } from '../types/language';
 import { apiClient, tokenManager } from './client';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
@@ -16,7 +17,8 @@ interface RecipeSearchResponse {
 export async function searchRecipes(
   userId: string,
   ingredients: string[],
-  maxResults: number = 15
+  maxResults: number = 15,
+  recipeLanguages?: RecipeLanguage[]
 ): Promise<ScoredRecipe[]> {
   const response = await apiClient.post<RecipeSearchResponse>(
     '/api/internal/recipes/search',
@@ -24,6 +26,7 @@ export async function searchRecipes(
       user_id: userId,
       ingredients,
       max_results: maxResults,
+      ...(recipeLanguages && { recipe_languages: recipeLanguages }),
     }
   );
   return response.data.recipes;
@@ -32,6 +35,7 @@ export async function searchRecipes(
 export interface StreamRecipeSearchOptions {
   ingredients: string[];
   maxResults?: number;
+  recipeLanguages?: RecipeLanguage[];
   onProgress?: (event: ProgressEvent) => void;
   onResult?: (recipes: ScoredRecipe[]) => void;
   onError?: (error: string) => void;
@@ -48,7 +52,7 @@ export interface StreamRecipeSearchOptions {
 export async function streamRecipeSearch(
   options: StreamRecipeSearchOptions
 ): Promise<AbortController> {
-  const { ingredients, maxResults = 15, onProgress, onResult, onError } = options;
+  const { ingredients, maxResults = 15, recipeLanguages, onProgress, onResult, onError } = options;
 
   const abortController = new AbortController();
   const token = tokenManager.getToken();
@@ -68,6 +72,7 @@ export async function streamRecipeSearch(
       body: JSON.stringify({
         ingredients,
         max_results: maxResults,
+        ...(recipeLanguages && { recipe_languages: recipeLanguages }),
       }),
       signal: abortController.signal,
     });

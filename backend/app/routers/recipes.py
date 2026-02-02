@@ -20,6 +20,10 @@ class RecipeSearchRequest(BaseModel):
     user_id: str = Field(description="User identifier")
     ingredients: list[str] = Field(description="List of ingredient names user has")
     max_results: int = Field(default=15, ge=1, le=30, description="Maximum recipes to return")
+    recipe_languages: list[str] | None = Field(
+        default=None,
+        description="Languages to use for recipe search (e.g., ['en', 'ja'])"
+    )
 
 
 class RecipeStreamRequest(BaseModel):
@@ -27,6 +31,10 @@ class RecipeStreamRequest(BaseModel):
 
     ingredients: list[str] = Field(description="List of ingredient names user has")
     max_results: int = Field(default=15, ge=1, le=30, description="Maximum recipes to return")
+    recipe_languages: list[str] | None = Field(
+        default=None,
+        description="Languages to use for recipe search (e.g., ['en', 'ja'])"
+    )
 
 
 class ScoredRecipeResponse(BaseModel):
@@ -61,6 +69,7 @@ async def search_recipes(request: RecipeSearchRequest):
             user_id=request.user_id,
             ingredients=request.ingredients,
             max_results=request.max_results,
+            recipe_languages=request.recipe_languages,
         )
 
         # Convert to response format
@@ -114,6 +123,7 @@ async def stream_recipe_search(request: RecipeStreamRequest, current_user: Curre
                 user_id=current_user,
                 ingredients=request.ingredients,
                 max_results=request.max_results,
+                recipe_languages=request.recipe_languages,
                 on_progress=on_progress,
             )
 
