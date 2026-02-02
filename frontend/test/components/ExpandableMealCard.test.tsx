@@ -26,7 +26,7 @@ describe('ExpandableMealCard', () => {
     raw_description: 'A simple and delicious pasta recipe with fresh ingredients',
     duration: 1800, // 30 minutes in seconds
     posted_at: '2024-01-15T10:00:00Z',
-    cache_expires_at: '2024-01-16T10:000Z',
+    cache_expires_at: '2024-01-16T10:00:00Z',
   };
 
   it('renders disabled state for skipped day', () => {

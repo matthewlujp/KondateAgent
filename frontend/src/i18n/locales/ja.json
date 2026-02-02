@@ -1,0 +1,68 @@
+{
+  "common": {
+    "save": "保存",
+    "cancel": "キャンセル",
+    "back": "戻る",
+    "loading": "読み込み中...",
+    "error": "エラーが発生しました",
+    "success": "成功"
+  },
+  "settings": {
+    "title": "設定",
+    "language": "言語",
+    "languageDescription": "表示言語とレシピ検索言語を設定",
+    "displayLanguage": "表示言語",
+    "recipeSearchLanguages": "レシピ検索言語",
+    "recipeSearchHint": "レシピを検索する言語を選択",
+    "channels": "レシピソース",
+    "channelsDescription": "YouTubeチャンネルを管理"
+  },
+  "mealPlan": {
+    "pageTitle": "献立を計画",
+    "pageSubtitle": "材料から週間プランまで",
+    "title": "献立プラン",
+    "ingredients": "材料",
+    "recipes": "レシピ",
+    "recipesFound": "見つかったレシピ",
+    "plan": "プラン",
+    "yourMealPlan": "あなたの献立プラン",
+    "startPlanning": "プランニング開始",
+    "loading": "献立プランを作成中...",
+    "noRecipes": "レシピが見つかりません",
+    "addIngredients": "材料を追加",
+    "searchRecipes": "レシピを再検索",
+    "searchingRecipes": "レシピを検索中...",
+    "searchAgain": "もう一度検索",
+    "whichDays": "どの曜日をプランしますか？",
+    "generatePlan": "プランを生成",
+    "regeneratePlan": "プランを再生成",
+    "generatingPlan": "プランを生成中...",
+    "match": "一致",
+    "need": "必要"
+  },
+  "ingredients": {
+    "title": "あなたの材料",
+    "add": "材料を追加",
+    "remove": "削除",
+    "placeholder": "材料を入力...",
+    "voiceInput": "音声入力を使用",
+    "listening": "聞いています...",
+    "tapToStart": "タップして開始",
+    "tellMeIngredients": "冷蔵庫の中身を教えてください",
+    "sayDoneWhenFinished": "終わったら「完了」または「終わり」と言ってください",
+    "voiceNotSupported": "このブラウザは音声入力に対応していません。Chrome、Edge、またはSafariを使用するか、テキスト入力をご利用ください。"
+  },
+  "languages": {
+    "en": "英語",
+    "ja": "日本語"
+  },
+  "days": {
+    "monday": "月曜日",
+    "tuesday": "火曜日",
+    "wednesday": "水曜日",
+    "thursday": "木曜日",
+    "friday": "金曜日",
+    "saturday": "土曜日",
+    "sunday": "日曜日"
+  }
+}

@@ -1,9 +1,12 @@
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ChannelManagementSection } from '../components/ChannelManagementSection';
 import { PlaceholderSection } from '../components/PlaceholderSection';
+import { LanguageSettingsSection } from '../components/LanguageSettingsSection';
 
 export function SettingsPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <div className="min-h-screen bg-cream bg-kitchen-pattern">
@@ -20,7 +23,7 @@ export function SettingsPage() {
             </svg>
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-white font-display">Settings</h1>
+            <h1 className="text-2xl font-bold text-white font-display">{t('settings.title')}</h1>
             <p className="text-sm text-terra-50 mt-0.5">Manage your preferences</p>
           </div>
         </div>
@@ -28,6 +31,8 @@ export function SettingsPage() {
 
       {/* Main Content */}
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+        <LanguageSettingsSection />
+
         <ChannelManagementSection />
 
         <PlaceholderSection

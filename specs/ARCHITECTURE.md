@@ -232,6 +232,7 @@ Translation files in `src/i18n/locales/`:
 
 Supported languages: English (`en`), Japanese (`ja`)
 
+
 ---
 
 ## Data Flow

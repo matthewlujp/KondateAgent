@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import { useLanguageSettings } from '../contexts';
 import {
   SessionStartModal,
   VoiceInputController,
@@ -54,6 +56,10 @@ const WEEKDAY_DEFAULTS: DayOfWeek[] = [
  * Each section is collapsible and has independent refresh buttons.
  */
 export function MealPlanningPage() {
+  // Language settings
+  const { t } = useTranslation();
+  const { recipeSearchLanguages } = useLanguageSettings();
+
   // Session state
   const [session, setSession] = useState<IngredientSession | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -280,6 +286,7 @@ export function MealPlanningPage() {
       const controller = await streamRecipeSearch({
         ingredients: ingredientNames,
         maxResults: 15,
+        recipeLanguages: recipeSearchLanguages,
         onProgress: (progress) => {
           setSearchProgress(progress);
         },
@@ -414,10 +421,10 @@ export function MealPlanningPage() {
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-start justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white font-display">
-              Plan Your Meals
+              {t('mealPlan.pageTitle')}
             </h1>
             <p className="text-sm text-terra-50 mt-1">
-              From ingredients to weekly plan
+              {t('mealPlan.pageSubtitle')}
             </p>
           </div>
           <Link
@@ -471,12 +478,12 @@ export function MealPlanningPage() {
         {showBanner && <ChannelBanner onDismiss={handleDismissBanner} />}
 
         {/* Section 1: Ingredients */}
-        <CollapsibleSection title="§ Ingredients" defaultExpanded={true}>
+        <CollapsibleSection title={`§ ${t('mealPlan.ingredients')}`} defaultExpanded={true}>
           <div className="space-y-6">
             {/* Voice Input */}
             <div>
               <h3 className="text-sm font-semibold text-sand-900 mb-3 text-center">
-                Add Ingredients
+                {t('mealPlan.addIngredients')}
               </h3>
               <VoiceInputController
                 onTranscript={handleVoiceTranscript}
@@ -494,7 +501,7 @@ export function MealPlanningPage() {
             {/* Ingredients List */}
             <div>
               <h3 className="text-sm font-semibold text-sand-900 mb-3">
-                Your Ingredients
+                {t('ingredients.title')}
               </h3>
               <IngredientList
                 ingredients={session?.ingredients || []}
@@ -536,7 +543,7 @@ export function MealPlanningPage() {
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     />
                   </svg>
-                  Searching recipes...
+                  {t('mealPlan.searchingRecipes')}
                 </>
               ) : (
                 <>
@@ -553,7 +560,7 @@ export function MealPlanningPage() {
                       d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                     />
                   </svg>
-                  Re-search Recipes
+                  {t('mealPlan.searchRecipes')}
                 </>
               )}
             </button>
@@ -572,7 +579,7 @@ export function MealPlanningPage() {
         {/* Section 2: Recipes */}
         {recipes.length > 0 && (
           <CollapsibleSection
-            title={`§ Recipes Found (${recipes.length})`}
+            title={`§ ${t('mealPlan.recipesFound')} (${recipes.length})`}
             defaultExpanded={true}
           >
             <div className="space-y-4">
@@ -601,11 +608,11 @@ export function MealPlanningPage() {
                         </a>
                         <p className="text-xs text-sand-600">
                           {sr.recipe.creator_name} ·{' '}
-                          {Math.round(sr.coverage_score * 100)}% match
+                          {Math.round(sr.coverage_score * 100)}% {t('mealPlan.match')}
                         </p>
                         {sr.missing_ingredients.length > 0 && (
                           <p className="text-xs text-chili-600 mt-1">
-                            Need: {sr.missing_ingredients.slice(0, 2).join(', ')}
+                            {t('mealPlan.need')}: {sr.missing_ingredients.slice(0, 2).join(', ')}
                             {sr.missing_ingredients.length > 2 &&
                               ` +${sr.missing_ingredients.length - 2}`}
                           </p>
@@ -635,7 +642,7 @@ export function MealPlanningPage() {
                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                   />
                 </svg>
-                Search Again
+                {t('mealPlan.searchAgain')}
               </button>
             </div>
           </CollapsibleSection>
@@ -643,17 +650,17 @@ export function MealPlanningPage() {
 
         {/* Section 3: Meal Plan */}
         {recipes.length > 0 && (
-          <CollapsibleSection title="§ Your Meal Plan" defaultExpanded={true}>
+          <CollapsibleSection title={`§ ${t('mealPlan.yourMealPlan')}`} defaultExpanded={true}>
             <div className="space-y-6">
               {/* Day Toggles */}
               <div>
                 <h3 className="text-sm font-semibold text-sand-900 mb-3">
-                  Which days would you like to plan?
+                  {t('mealPlan.whichDays')}
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
                   {ALL_DAYS.map((day) => {
                     const isEnabled = enabledDays.has(day);
-                    const dayLabel = day.charAt(0).toUpperCase() + day.slice(1);
+                    const dayLabel = t(`days.${day}`);
 
                     return (
                       <button
@@ -743,7 +750,7 @@ export function MealPlanningPage() {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       />
                     </svg>
-                    Generating plan...
+                    {t('mealPlan.generatingPlan')}
                   </>
                 ) : (
                   <>
@@ -760,7 +767,7 @@ export function MealPlanningPage() {
                         d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                       />
                     </svg>
-                    {plan ? 'Regenerate Plan' : 'Generate Plan'}
+                    {plan ? t('mealPlan.regeneratePlan') : t('mealPlan.generatePlan')}
                   </>
                 )}
               </button>

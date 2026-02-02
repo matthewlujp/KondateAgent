@@ -294,6 +294,7 @@ en | ja
 
 ---
 
+
 ## Value Objects
 
 These are not persisted entities but important domain concepts:
@@ -351,6 +352,7 @@ Rules that must always be true:
 5. **Plan ties to session**: `MealPlan.ingredient_session_id` must reference a valid `IngredientSession`
 
 6. **Recipe languages not empty**: `LanguageSettings.recipe_search_languages` must have at least one language
+
 
 ---
 

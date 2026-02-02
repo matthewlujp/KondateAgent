@@ -8,6 +8,7 @@ from app.routers import (
     recipes_router,
     creators_router,
     meal_plans_router,
+    settings_router,
 )
 from app.config import settings
 
@@ -33,6 +34,7 @@ app.include_router(ingredients_router)
 app.include_router(recipes_router)
 app.include_router(creators_router)
 app.include_router(meal_plans_router)
+app.include_router(settings_router)
 
 
 @app.get("/health")
