@@ -243,9 +243,29 @@ class TestRecipeCollectionE2E:
             creator_name="Creator 2",
         )
 
+        # Mock YouTube API response
+        mock_yt_response = AsyncMock()
+        mock_yt_response.status_code = 200
+        mock_yt_response.json = lambda: {
+            "items": [
+                {
+                    "id": "UCcreator1",
+                    "snippet": {"title": "Creator 1"},
+                }
+            ]
+        }
+        mock_yt_response.raise_for_status = lambda: None
+
+        # Create a mock httpx client
+        mock_httpx_client = AsyncMock()
+        mock_httpx_client.get.return_value = mock_yt_response
+        mock_httpx_client.__aenter__.return_value = mock_httpx_client
+        mock_httpx_client.__aexit__.return_value = None
+
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             # Step 1: Add two creators
-            with patch("app.routers.creators.creator_store") as mock_store:
+            with patch("app.routers.creators.creator_store") as mock_store, \
+                 patch("httpx.AsyncClient", return_value=mock_httpx_client):
                 mock_store.create.side_effect = [creator1, creator2]
 
                 # Add first creator
@@ -373,6 +393,13 @@ async def test_recipe_collection_with_youtube_only():
 
         service = RecipeCollectionService()
 
+        # Mock the query generator
+        service.query_generator = AsyncMock()
+        service.query_generator.generate.return_value = SearchQueries(
+            direct_queries=["chicken pasta recipe"],
+            dish_suggestions=["chicken alfredo"],
+        )
+
         # Mock the YouTube client to return results
         mock_youtube_result = YouTubeSearchResult(
             video_id="test_video",
@@ -422,6 +449,13 @@ async def test_recipe_collection_with_instagram_only():
         mock_settings.enabled_sources = ["instagram"]
 
         service = RecipeCollectionService()
+
+        # Mock the query generator
+        service.query_generator = AsyncMock()
+        service.query_generator.generate.return_value = SearchQueries(
+            direct_queries=["chicken pasta recipe"],
+            dish_suggestions=["chicken alfredo"],
+        )
 
         # Mock the Instagram client to return results
         mock_instagram_result = InstagramSearchResult(

@@ -264,8 +264,28 @@ class TestCreateCreatorEndpoint:
             creator_name="chef",
         )
 
+        # Mock YouTube API response
+        mock_yt_response = AsyncMock()
+        mock_yt_response.status_code = 200
+        mock_yt_response.json = lambda: {
+            "items": [
+                {
+                    "id": "chef",
+                    "snippet": {"title": "chef"},
+                }
+            ]
+        }
+        mock_yt_response.raise_for_status = lambda: None
+
+        # Create a mock httpx client
+        mock_httpx_client = AsyncMock()
+        mock_httpx_client.get.return_value = mock_yt_response
+        mock_httpx_client.__aenter__.return_value = mock_httpx_client
+        mock_httpx_client.__aexit__.return_value = None
+
         # CreatorStore.create returns existing creator for duplicates
-        with patch("app.routers.creators.creator_store.create", return_value=existing_creator):
+        with patch("app.routers.creators.creator_store.create", return_value=existing_creator), \
+             patch("httpx.AsyncClient", return_value=mock_httpx_client):
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 response = await client.post(
                     "/api/creators",
